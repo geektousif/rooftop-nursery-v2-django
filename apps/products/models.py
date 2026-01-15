@@ -1,0 +1,120 @@
+from django.db import models
+from django.utils.translation import gettext_lazy as _
+from django.utils.text import slugify
+
+from apps.categories.models import Category
+from apps.core.models import BaseModel
+
+
+class Product(BaseModel):
+    """
+    Base Product (For Overview details only)
+    """
+
+    name = models.CharField(max_length=255)
+    slug = models.SlugField(unique=True)
+    description = models.TextField()
+    attributes = models.JSONField(default=dict)
+    tags = models.JSONField(default=list)
+
+    vendor = models.ForeignKey("Vendor", on_delete=models.CASCADE)
+    category = models.ManyToManyField("Category", related_name="products")
+
+    is_active = models.BooleanField(default=True)
+    # is_featured = models.BooleanField(default=False)
+    # TODO suggest in frontend
+    # def save(self, *args, **kwargs):
+    #     if not self.sku:
+    #         self.sku = self.slug
+    #     super().save(*args, **kwargs)
+
+    # create base variant
+
+    class Meta(BaseModel.Meta):
+        unique_together = ["name", "vendor"]
+        indexes = [
+            models.Index(fields=["name", "vendor"], name="idx_product_name_vendor"),
+            models.Index(fields=["is_active"], name="idx_product_is_active"),
+        ]
+
+    def __str__(self):
+        return self.name
+
+
+class ProductVariant(BaseModel):
+    """
+    Sellable Entities
+    """
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    sku = models.CharField(max_length=255, unique=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    mrp = models.DecimalField(max_digits=10, decimal_places=2)  # Compared Price
+    cost_price = models.DecimalField(
+        max_digits=10, decimal_places=2
+    )  # For Internal Profit Calculation
+    display_order = models.PositiveIntegerField()
+    weight_grams = models.PositiveIntegerField()
+    unit = models.CharField(max_length=255)
+    unit_value = models.DecimalField(max_digits=10, decimal_places=2)
+
+    is_active = models.BooleanField(default=True)
+    is_single_unit = models.BooleanField(default=False)
+
+    class Meta(BaseModel.Meta):
+        unique_together = ["product", "sku"]
+        indexes = [
+            models.Index(fields=["product", "sku"], name="idx_product_sku"),
+            models.Index(fields=["is_active"], name="idx_product_is_active"),
+            models.Index(
+                fields=["product", "display_order"], name="idx_product_display_order"
+            ),
+            models.Index(fields=["product"], name="idx_product"),
+        ]
+
+    # def save(self, *args, **kwargs):
+    #     if self.is_single_unit:
+    #         if ProductVariant.objects.filter(product=self.product).count() >= 1:
+    #             return
+
+    #     super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.product.name} - {self.name}"
+
+
+class ProductImage(BaseModel):
+    # TODO: add background job for image cleanup after product deletion
+    variant = models.ForeignKey(ProductVariant, on_delete=models.SET_NULL, null=True)
+    image_url = models.URLField()
+    image_provider_id = models.CharField(max_length=255, blank=True, null=True)
+    is_display_image = models.BooleanField(default=False)
+    display_order = models.PositiveIntegerField()
+
+    class Meta(BaseModel.Meta):
+        unique_together = ["variant", "display_order"]
+
+    def __str__(self):
+        return f"Image for {self.variant.product.name} - {self.variant.variant_name}"
+        # return f"Image for {self.product.name} - {self.variant.name}"
+
+
+class ProductReview(BaseModel):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    # variant = models.ForeignKey(ProductVariant, on_delete=models.SET_NULL, null=True)
+    customer = models.ForeignKey("Customer", on_delete=models.CASCADE)
+    reviewer_name = models.CharField(max_length=255)
+    rating = models.PositiveIntegerField()
+    comment = models.TextField()
+    body = models.TextField()
+    is_verified = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Review for {self.product.name} by {self.customer.full_name}"
+
+    class Meta(BaseModel.Meta):
+        unique_together = ["product", "customer"]
+        indexes = [
+            models.Index(fields=["product", "customer"], name="idx_product_customer")
+        ]

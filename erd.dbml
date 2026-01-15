@@ -1,0 +1,499 @@
+// ==========================================
+// NURSERY E-COMMERCE PLATFORM (SCALABLE)
+// ==========================================
+
+Project Nursery_Ecommerce {
+  database_type: 'PostgreSQL'
+  Note: 'Scalable schema with Inventory decoupling, Multi-vendor support, and JSONB attributes.'
+}
+
+// ==========================================
+// 1. AUTH & USERS
+// ==========================================
+
+Table users {
+  id uuid [pk, default: `gen_random_uuid()`]
+  email varchar [unique, not null]
+  phone varchar [unique, not null, note: 'Primary identifier for Indian market']
+  password_hash varchar
+  full_name varchar
+
+  role enum [note: 'customer, vendor, admin, superadmin']
+  
+  is_active boolean [default: true]
+  is_verified boolean [default: false]
+  
+  last_login timestamptz
+  created_at timestamptz [default: `now()`]
+  
+  Note: 'Registered accounts. Guest data lives in orders table.'
+}
+
+Table addresses {
+  id uuid [pk, default: `gen_random_uuid()`]
+  user_id uuid [ref: > users.id, note: 'Address book for registered users']
+  
+  type varchar [note: 'shipping, billing']
+  full_name varchar
+  phone varchar
+  address varchar
+  city varchar
+  state varchar
+  pincode varchar
+  country varchar [default: 'India']
+  
+  is_default boolean [default: false]
+  created_at timestamptz
+}
+
+// ==========================================
+// 2. VENDOR MANAGEMENT (Marketplace Logic)
+// ==========================================
+
+Table vendors {
+  id uuid [pk, default: `gen_random_uuid()`]
+  user_id uuid [ref: - users.id, note: 'Link to the owner user account']
+  
+  business_name varchar
+  slug varchar [unique]
+  gstin varchar
+  business_address varchar
+  business_phone integer
+  commission_rate decimal [default: 10.0, note: 'Platform fee percentage']
+  
+  is_approved boolean [default: false]
+  is_active boolean [default: true]
+  
+  created_at timestamptz
+  approved_at timestamptz
+}
+
+Table vendor_bank_accounts {
+  id uuid [pk]
+  vendor_id uuid [ref: > vendors.id]
+  account_holder varchar
+  account_number varchar [note: 'Encrypted']
+  ifsc_code varchar
+  bank_name varchar
+  branch_name varchar
+  is_verified boolean [default: false]
+
+  verified_at timestamptz
+}
+
+Table vendor_payouts {
+  id uuid [pk]
+  vendor_id uuid [ref: > vendors.id]
+  reference_id varchar [unique, note: 'PAYOUT-YYYYMMDD-XXX']
+  
+  gross_amount decimal
+  tax_deducted decimal [note: '1% TDS if applicable']
+  net_amount decimal
+  
+  status varchar [note: 'pending, processing, completed, failed']
+  transaction_ref varchar [note: 'Bank UTR number']
+  notes text
+  processed_at timestamptz
+  created_at timestamptz
+}
+
+// ==========================================
+// 3. PRODUCT CATALOG (Nursery Specifics)
+// ==========================================
+
+Table categories {
+  id int [pk, increment]
+  parent_id int [ref: > categories.id]
+  name varchar
+  slug varchar [unique]
+  
+  // Optimization for Tree Traversal
+  path text [note: 'Materialized path (e.g. 1/5/12) for fast sub-category queries']
+  
+  description text
+  image_url varchar
+  is_active boolean [default: true]
+
+  seo_title varchar
+  seo_description varchar
+}
+
+Table products {
+  id uuid [pk, default: `gen_random_uuid()`]
+  vendor_id uuid [ref: > vendors.id]
+  category_id int [ref: > categories.id]
+  
+  // Internal/Base Details
+  name varchar [note: 'Internal Base Name, e.g., "Ficus Lyrata"']
+  slug varchar [unique]
+  description text [note: 'HTML/Markdown content']
+  base_price decimal [note: 'for marketing purpose, "Starts at 100"']
+  
+  // NURSERY SPECIFIC DATA (JSONB)
+  // Store: { "sunlight": "Full Sun", "water": "Daily", "scientific_name": "Ficus Lyrata" }
+  attributes jsonb [default: '{}', note: 'Searchable attributes']
+  
+  tags text[] [note: 'Array of tags for search']
+
+  is_active boolean [default: false]
+  is_featured boolean [default: false]
+  
+  seo_title varchar
+  seo_description varchar
+  
+  created_at timestamptz
+  updated_at timestamptz
+
+  indexes {
+    (is_active)
+  }
+}
+
+
+Table product_variants {
+  id uuid [pk, default: `gen_random_uuid()`]
+  product_id uuid [ref: > products.id]
+  // vendor_id - later if needed , multiple vendors add same product
+
+  // The "Sellable" Entity
+  sku varchar [unique, not null]
+  
+  // Display Name logic: Product Name + Variant Option (e.g., "Ficus Lyrata - 2ft Pot")
+  variant_title varchar [note: 'Optional: Specific name if needed']
+  // name varchar [note: 'e.g. 5kg Bag, Small Pot']
+  
+  // VARIANT SPECIFICS (JSONB)
+  // Store: { "weight": "5kg", "color": "terracotta", "material": "clay" }
+  options jsonb [not null]
+  
+  price decimal(10,2) [not null]
+  compare_at_price decimal [note: 'Strike-through price']
+  cost_price decimal [note: 'Internal: For profit calculation']
+  
+  display_order int
+  weight_grams int [note: 'Crucial for shipping calc']
+  unit varchar
+  unit_value decimal
+  is_active boolean [default: true]
+  
+  // NOTE: No stock_quantity here. See Inventory table.
+}
+
+Table product_images {
+  id uuid [pk]
+  // product_id uuid [ref: > products.id]
+  variant_id uuid [ref: > product_variants.id, null]
+  image_url varchar
+  imagekit_id varchar
+  alt_text varchar
+  display_order int
+  is_primary boolean
+}
+
+// ==========================================
+// 4. INVENTORY & FULFILLMENT (Scalable)
+// ==========================================
+
+
+Table inventory_items {
+  id uuid [pk]
+  variant_id uuid [ref: > product_variants.id]
+  
+  // Simple Logic: Available = Stock - Reserved
+  stock_count int [default: 0, note: 'Physical count in nursery']
+  reserved_count int [default: 0, note: 'Items in carts or unfulfilled orders']
+  
+  low_stock_threshold int [default: 5, note: 'Alert admin when below this']
+  updated_at timestamptz
+
+
+  Note: 'Kept separate from Variants to prevent table locking during checkout'
+}
+
+Table inventory_logs {
+  id uuid [pk]
+  variant_id uuid [ref: > product_variants.id]
+  change_quantity integer
+  action_type varchar [note: 'sale, restock, reservation, adjustment']
+  reference_id uuid
+  previous_quantity int
+  new_quantity int
+  created_at timestamptz
+}
+
+// ==========================================
+// 5. ORDERS & CHECKOUT
+// ==========================================
+
+Table carts {
+  id uuid [pk]
+  user_id uuid [ref: > users.id, null]
+  session_id varchar [note: 'Cookie ID for tracking guests']
+  
+  is_active boolean [default: true]
+  created_at timestamptz
+  updated_at timestamptz
+  
+  indexes {
+    (session_id)
+  }
+}
+
+Table cart_items {
+  id uuid [pk]
+  cart_id uuid [ref: > carts.id]
+  variant_id uuid [ref: > product_variants.id]
+
+  quantity int
+  variant_snapshot jsonb
+
+  added_at timestamptz [default: `now()`]
+}
+
+Table orders {
+  id uuid [pk]
+  order_number varchar [unique, note: 'Human readable: ORD-2023-1001']
+
+  // GUEST CHECKOUT LOGIC
+  user_id uuid [ref: > users.id, null, note: 'NULL if guest checkout']
+  guest_email varchar 
+  guest_phone varchar [note: 'Required if user_id is null']
+  
+  // JSON Snapshot of address at time of order
+  // Data Snapshots (History Preservation)
+  shipping_address jsonb [not null, note: 'Full JSON snapshot of address']
+  billing_address jsonb
+  
+  // Status
+  status varchar [note: 'pending, paid, unfulfilled, shipped, completed, cancelled']
+  payment_status varchar [note: 'pending, paid, failed, refunded']
+  fulfillment_status varchar [note: 'unfulfilled, partial, shipped']
+
+  // Financials
+  currency varchar [default: 'INR']
+  subtotal_amount decimal(10,2)
+  shipping_amount decimal(10,2)
+  discount_amount decimal(10,2)
+  tax_amount decimal(10,2)
+  grand_total decimal(10,2)
+  
+  coupon_code varchar [note: 'Code used']
+  
+  notes text
+  created_at timestamptz
+  updated_at timestamptz
+  confirmed_at timestamptz
+  shipped_at timestamptz
+  delivered_at timestamptz
+  cancelled_at timestamptz
+  cancellation_reason varchar
+
+  indexes {
+    (created_at)
+    (status)
+  }
+}
+
+Table order_items {
+  id uuid [pk]
+  order_id uuid [ref: > orders.id]
+  variant_id uuid [ref: > product_variants.id]
+  vendor_id uuid [ref: > vendors.id]
+  
+  // Snapshots (Price changes shouldn't affect old orders)
+  product_name varchar
+  variant_name varchar
+  sku varchar
+  unit_price decimal
+  tax_amount decimal
+  
+  quantity int
+  total_price decimal
+
+  total_discount decimal(10,2) [note: 'Discount applied to this specific item']
+  
+  is_refunded boolean [default: false]
+  fulfillment_status varchar [default: 'pending', note: 'Allows split shipments per item']
+
+  vendor_payout_amount decimal
+  platform_commission decimal
+
+  tracking_number varchar
+  shipped_at timestamptz
+  delivered_at timestamptz
+
+  indexes {
+    (vendor_id)
+  }
+}
+
+Table payments {
+  id uuid [pk]
+  order_id uuid [ref: > orders.id]
+
+  gateway varchar [note: 'phonepe, razorpay, stripe']
+  gateway_order_id varchar
+  gateway_transaction_id varchar
+
+  amount decimal(10,2)
+  status varchar [note: 'pending, success, failed, refunded']
+  payment_method varchar [note: 'upi, card, netbanking, wallet']
+
+  payment_response jsonb [note: "Store full PhonePe response"]
+  failure_reason varchar
+
+  paid_at timestamptz
+  refunded_at timestamptz
+  refund_amount decimal(10,2)
+  idempotency_key varchar [unique, note: 'Prevent duplicate charges']
+
+  attempt_count int [default: 1]
+  last_attempted_at timestamptz
+  created_at timestamptz
+}
+
+Table refunds {
+  id uuid [pk, default: `gen_random_uuid()`]
+
+  order_id uuid [ref: > orders.id]
+  order_item_id uuid [ref: > order_items.id]
+
+  amount decimal(10,2)
+  reason varchar [note: 'damaged, cancelled, partial_refund']
+  status varchar [note: 'pending, approved, rejected, processed']
+
+  gateway_refund_id varchar
+  refund_response jsonb
+
+  created_at timestamptz [default: `now()`]
+  processed_at timestamptz
+}
+
+
+Table webhook_events {
+  id uuid [pk, default: `gen_random_uuid()`]
+
+  source varchar [note: 'phonepe, razorpay, shiprocket']
+  event_type varchar
+  payload jsonb
+
+  processed boolean [default: false]
+  processing_error text
+
+  created_at timestamptz [default: `now()`]
+}
+
+
+
+// ==========================================
+// 6. MARKETING & CONTENT
+// ==========================================
+
+Table coupons {
+  id uuid [pk]
+  code varchar [unique, note: 'e.g. SUMMER20']
+  description varchar
+
+  discount_type varchar [note: 'percentage, fixed_amount']
+  discount_value decimal(10,2)
+
+  // Protection Logic
+  min_purchase_amount decimal(10,2) [default: 0]
+  max_discount_amount decimal(10,2) [note: 'Cap for % discounts (e.g. Max ₹500 off)']
+  
+  start_date timestamptz
+  end_date timestamptz
+  
+  usage_limit int [note: 'Total times coupon can be used globaly']
+  usage_limit_per_user int [default: 1]
+ 
+  // Targeting
+  // { "category_ids": [1, 5], "product_ids": [], "exclude_sale_items": true }
+  applies_to_config jsonb 
+  
+  is_active boolean [default: true]
+}
+
+Table banners {
+  id int [pk, increment]
+  title varchar
+  image_url varchar [note: 'Desktop image']
+  mobile_image_url varchar [note: 'Mobile optimized image']
+  
+  link_url varchar
+  position varchar [note: 'hero_slider, sidebar_ad, footer']
+  
+  start_date timestamptz
+  end_date timestamptz
+  sort_order int
+  is_active boolean
+}
+
+Table store_settings {
+  key varchar [pk, note: 'site_title, support_phone, tax_rate, shipping_threshold']
+  value text
+  type varchar [note: 'string, boolean, number, json']
+  description varchar
+  is_active boolean [default: true]
+}
+
+Table nav_menus {
+  id int [pk, increment]
+  handle varchar [unique, note: 'main-menu, footer-menu']
+  title varchar
+  items jsonb [note: 'Nested JSON structure for links']
+}
+
+Table bundles {
+  id uuid [PK]
+  name string
+  slug string [unique]
+  description text
+  is_active boolean
+}
+
+Table bundle_items {
+  id uuid [pk]
+  bundle_id uuid [ref: > bundles.id]
+  variant_id  uuid [ref: > product_variants.id]
+  quantity integer
+  price decimal
+  mrp decimal
+}
+
+Table collections {
+  id uuid [pk]
+  name varchar
+  slug varchar [unique]
+  description text
+  is_active boolean
+}
+
+Table collection_items {
+  id uuid [pk]
+  collection_id uuid [ref: > collections.id]
+  variant_id uuid [ref: > product_variants.id]
+}
+
+Table featured_products {
+  id uuid [pk]
+  variant_id uuid [ref: > product_variants.id]
+  priority integer
+}
+
+// ==========================================
+// 6. REVIEWS
+// ==========================================
+
+Table reviews {
+  id uuid [pk]
+  product_id uuid [ref: > products.id]
+  user_id uuid [ref: > users.id, null, note: 'Allow guest reviews with email verification?']
+  reviewer_name varchar
+  rating int [note: '1-5']
+  title varchar
+  body text
+  is_verified_purchase boolean
+  created_at timestamptz
+}
+

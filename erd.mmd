@@ -1,0 +1,262 @@
+erDiagram
+    User ||--o{ Address : has
+    User ||--o{ Order : places
+    User ||--o{ Cart : has
+    User ||--o{ Review : writes
+    
+    Category ||--o{ Category : "parent-child"
+    Category ||--o{ Product : contains
+    
+    Product ||--o{ ProductVariant : has
+    Product ||--o{ ProductImage : has
+    Product ||--o{ Review : receives
+    Product }o--o{ Category : "belongs to"
+    
+    ProductVariant ||--o{ InventoryItem : tracked_in
+    ProductVariant ||--o{ OrderItem : included_in
+    ProductVariant ||--o{ CartItem : added_to
+    
+    Cart ||--o{ CartItem : contains
+    
+    Order ||--o{ OrderItem : contains
+    Order ||--|| Address : ships_to
+    Order ||--|| Address : bills_to
+    Order ||--o{ Payment : has
+    Order ||--o{ Shipment : has
+    Order ||--|| Invoice : generates
+    
+    Warehouse ||--o{ InventoryItem : stores
+    
+    Coupon ||--o{ Order : applied_to
+    
+    User {
+        uuid id PK
+        string email UK
+        string phone UK
+        string first_name
+        string last_name
+        boolean is_active
+        boolean is_staff
+        datetime date_joined
+        datetime last_login
+    }
+    
+    Address {
+        uuid id PK
+        uuid user_id FK
+        string address_type
+        string full_name
+        string phone
+        text address_line1
+        text address_line2
+        string city
+        string state
+        string pincode
+        string country
+        boolean is_default
+        decimal latitude
+        decimal longitude
+    }
+    
+    Category {
+        uuid id PK
+        uuid parent_id FK
+        string name
+        string slug UK
+        text description
+        string image_url
+        boolean is_active
+        int sort_order
+        json meta_data
+    }
+    
+    Product {
+        uuid id PK
+        string name
+        string slug UK
+        text description
+        text short_description
+        string sku UK
+        decimal base_price
+        decimal compare_at_price
+        string brand
+        boolean is_active
+        boolean is_featured
+        datetime created_at
+        datetime updated_at
+        json meta_data
+        string hsn_code
+        decimal gst_rate
+    }
+    
+    ProductVariant {
+        uuid id PK
+        uuid product_id FK
+        string sku UK
+        string variant_name
+        json attributes
+        decimal price
+        decimal compare_at_price
+        decimal weight
+        string weight_unit
+        boolean is_active
+        int sort_order
+    }
+    
+    ProductImage {
+        uuid id PK
+        uuid product_id FK
+        string image_url
+        string alt_text
+        int sort_order
+        boolean is_primary
+    }
+    
+    InventoryItem {
+        uuid id PK
+        uuid variant_id FK
+        uuid warehouse_id FK
+        int quantity
+        int reserved_quantity
+        int available_quantity
+        datetime last_updated
+    }
+    
+    Warehouse {
+        uuid id PK
+        string name
+        string code UK
+        text address
+        string city
+        string state
+        string pincode
+        boolean is_active
+    }
+    
+    Cart {
+        uuid id PK
+        uuid user_id FK
+        string session_key
+        datetime created_at
+        datetime updated_at
+    }
+    
+    CartItem {
+        uuid id PK
+        uuid cart_id FK
+        uuid variant_id FK
+        int quantity
+        decimal price_snapshot
+        json custom_data
+        datetime added_at
+    }
+    
+    Order {
+        uuid id PK
+        string order_number UK
+        uuid user_id FK
+        uuid shipping_address_id FK
+        uuid billing_address_id FK
+        string status
+        string payment_status
+        string fulfillment_status
+        decimal subtotal
+        decimal discount_amount
+        decimal shipping_charge
+        decimal tax_amount
+        decimal total_amount
+        string currency
+        text customer_note
+        text internal_note
+        string source
+        datetime created_at
+        datetime updated_at
+        json meta_data
+    }
+    
+    OrderItem {
+        uuid id PK
+        uuid order_id FK
+        uuid variant_id FK
+        string product_name
+        string variant_name
+        string sku
+        int quantity
+        decimal unit_price
+        decimal discount_amount
+        decimal tax_amount
+        decimal total_price
+        json snapshot_data
+        string hsn_code
+        decimal gst_rate
+    }
+    
+    Payment {
+        uuid id PK
+        uuid order_id FK
+        string payment_method
+        string transaction_id
+        string gateway
+        string status
+        decimal amount
+        string currency
+        json gateway_response
+        datetime created_at
+        datetime completed_at
+    }
+    
+    Invoice {
+        uuid id PK
+        uuid order_id FK
+        string invoice_number UK
+        datetime invoice_date
+        string file_url
+        decimal cgst_amount
+        decimal sgst_amount
+        decimal igst_amount
+        decimal total_tax
+        decimal grand_total
+        string gstin
+        json tax_breakup
+    }
+    
+    Shipment {
+        uuid id PK
+        uuid order_id FK
+        string tracking_number
+        string carrier
+        string status
+        decimal weight
+        json carrier_response
+        datetime shipped_at
+        datetime delivered_at
+    }
+    
+    Coupon {
+        uuid id PK
+        string code UK
+        string coupon_type
+        decimal discount_value
+        string discount_type
+        decimal min_order_value
+        decimal max_discount
+        int usage_limit
+        int used_count
+        datetime valid_from
+        datetime valid_to
+        boolean is_active
+        json conditions
+    }
+    
+    Review {
+        uuid id PK
+        uuid product_id FK
+        uuid user_id FK
+        uuid order_id FK
+        int rating
+        string title
+        text comment
+        boolean is_verified
+        boolean is_approved
+        datetime created_at
+    }
