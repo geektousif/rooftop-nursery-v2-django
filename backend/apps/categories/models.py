@@ -7,7 +7,6 @@ from apps.core.models import BaseModel
 # Create your models here.
 class Category(TreeNodeModel, BaseModel):  # type: ignore
     display_field = "name"
-    # api_login_required = False
 
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True)

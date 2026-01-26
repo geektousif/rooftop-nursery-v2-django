@@ -14,8 +14,12 @@ dependencies = [
     "django-unfold>=0.76.0",
     "djangorestframework>=3.16.1",
     "djangorestframework-stubs>=3.16.7",
+    "drf-auth-kit>=1.1.3",
     "drf-spectacular>=0.29.0",
     "drf-spectacular-sidecar>=2026.1.1",
+    "drf-standardized-errors[openapi]>=0.15.0",
+    "imagekitio>=5.1.0",
+    "pillow>=12.1.0",
     "psycopg[binary]>=3.3.2",
 ]
 

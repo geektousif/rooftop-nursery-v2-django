@@ -11,7 +11,6 @@ class UserManager(BaseUserManager):
         if not (email or phone):
             raise ValueError("Either phone or email must be provided")
 
-
         role = role or self.model.UserRoles.CUSTOMER
 
         if email:
@@ -21,36 +20,26 @@ class UserManager(BaseUserManager):
         user.set_password(password)
         return user
 
-    def _create_user(self, phone=None, email=None, role=None, password=None, **extra_fields):
+    def _create_user(
+        self, phone=None, email=None, role=None, password=None, **extra_fields
+    ):
         user = self._create_user_object(phone, email, role, password, **extra_fields)
         user.save(using=self._db)
         return user
 
-    async def _acreate_user(self, phone=None, email=None, role=None, password=None, **extra_fields):
-        user = self._create_user_object(phone, email, role, password, **extra_fields)
-        await user.asave(using=self._db)
-        return user
-
-    def create_user(self, phone=None, email=None, role=None, password=None, **extra_fields):
+    def create_user(
+        self, phone=None, email=None, role=None, password=None, **extra_fields
+    ):
         extra_fields.setdefault("is_staff", False)
         extra_fields.setdefault("is_superuser", False)
         return self._create_user(phone, email, role, password, **extra_fields)
 
     create_user.alters_data = True
 
-    async def acreate_user(self, phone=None, email=None, role=None,password=None, **extra_fields):
-        extra_fields.setdefault("is_staff", False)
-        extra_fields.setdefault("is_superuser", False)
-        return await self._acreate_user(phone, email, role,password, **extra_fields)
-
-    acreate_user.alters_data = True
-
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
-        extra_fields.setdefault(
-            "role", "super_admin"
-        )
+        extra_fields.setdefault("role", self.model.UserRoles.SUPER_ADMIN)
 
         if extra_fields.get("is_staff") is not True:
             raise ValueError("Superuser must have is_staff=True.")
@@ -61,35 +50,16 @@ class UserManager(BaseUserManager):
 
     create_superuser.alters_data = True
 
-    async def acreate_superuser(
-        self, email=None, password=None, **extra_fields
-    ):
-        extra_fields.setdefault("is_staff", True)
-        extra_fields.setdefault("is_superuser", True)
-        extra_fields.setdefault("role", self.model.roles.SUPER_ADMIN)
-
-        if extra_fields.get("is_staff") is not True:
-            raise ValueError("Superuser must have is_staff=True.")
-        if extra_fields.get("is_superuser") is not True:
-            raise ValueError("Superuser must have is_superuser=True.")
-
-        return await self._acreate_user(email=email, password=password, **extra_fields)
-
-    acreate_superuser.alters_data = True
-
-    def create_staffuser(self, email=None, password=None, **extra_fields):
-        extra_fields.setdefault("role", self.model.roles.ADMIN)
+    def create_admin(self, email, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", False)
+        extra_fields.setdefault("role", self.model.UserRoles.ADMIN)
+
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError("Admin must have is_staff=True.")
+        if extra_fields.get("is_superuser") is not False:
+            raise ValueError("Admin must have is_superuser=False.")
 
         return self._create_user(email=email, password=password, **extra_fields)
 
-    async def acreate_staffuser(self, email=None, password=None, **extra_fields):
-        extra_fields.setdefault("role", self.model.roles.ADMIN)
-        extra_fields.setdefault("is_staff", True)
-        extra_fields.setdefault("is_superuser", False)
-
-        return await self._acreate_user(email=email, password=password, **extra_fields)
-
-
-
+    create_admin.alters_data = True

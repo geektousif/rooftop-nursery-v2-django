@@ -20,7 +20,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import { ProductCard } from '@/components/product-card'
+import { ProductCard } from '@/components/domains/products/product-card'
 import { Navbar } from '@/components/common/navbar'
 import { Footer } from '@/components/common/footer'
 import { mockProducts, type Product } from '@/lib/mock-data'

@@ -15,6 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+from auth_kit.views import AuthKitUIView
 from django.conf import settings
 from django.conf.urls.static import static as static_urls
 from django.contrib import admin
@@ -24,39 +25,36 @@ from drf_spectacular.views import (
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
-from treenode.views import AutoTreeAPI
 
-api_patterns = AutoTreeAPI(base_url="api/v1").discover()
+from apps.categories.views import CategoryAutoTreeAPI
+
+api_patterns = CategoryAutoTreeAPI(base_url="api/v1").discover()
 
 urlpatterns = [
-    path("", include((api_patterns, "treenode"), namespace="treenode")),
+    path(
+        "",
+        include((api_patterns, "treenode"), namespace="treenode"),
+    ),
+    # path("admin/api/imagekit-auth/", imagekit_auth_view, name="imagekit_auth"),
     path("admin/", admin.site.urls),
     # API endpoints
-    # path('api/v1/', include('apps.categories.urls')),
-    path("api/v1/", include("apps.products.urls")),
-    path("api/v1/", include("apps.users.urls")),
-    path("api/v1/", include("apps.customers.urls")),
-    path("api/v1/", include("apps.orders.urls")),
-    path("api/v1/", include("apps.inventory.urls")),
-    path("api/v1/", include("apps.coupons.urls")),
-    path("api/v1/", include("apps.payments.urls")),
-    path("api/v1/", include("apps.reviews.urls")),
-    path("api/v1/", include("apps.vendors.urls")),
-    path("api/v1/", include("apps.images.urls")),
-    path("api/v1/", include("apps.storefront.urls")),
-    path("api/v1/", include("apps.webhooks.urls")),
-    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path("api/v1/", include("apps.core.urls")),
+    path("api/v1/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
-        "api/docs/swagger/",
+        "api/v1/docs/swagger/",
         SpectacularSwaggerView.as_view(url_name="schema"),
         name="swagger-ui",
     ),
     path(
-        "api/docs/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"
+        "api/v1/docs/redoc/",
+        SpectacularRedocView.as_view(url_name="schema"),
+        name="redoc",
     ),
 ]
 
-
 if settings.DEBUG:
-    urlpatterns += [path("silk/", include("silk.urls", namespace="silk"))]
+    urlpatterns += [
+        path("api/v1/auth/ui/", AuthKitUIView.as_view(), name="auth_kit_ui"),
+        path("silk/", include("silk.urls", namespace="silk")),
+    ]
     urlpatterns += static_urls(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

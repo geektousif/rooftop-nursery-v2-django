@@ -1,0 +1,50 @@
+{% load static %}
+
+<div class="imagekit-upload-container">
+    
+    <!-- File Input (triggers upload) -->
+    <input 
+        type="file" 
+        name="{{ widget.name }}_upload"
+        id="{{ widget.attrs.id }}"
+        class="imagekit-upload-widget"
+        accept="image/*"
+        {% if widget.attrs.required %}required{% endif %}
+    >
+    
+    <!-- Hidden URL field (populated by JavaScript) -->
+    <input 
+        type="hidden" 
+        name="{{ widget.name }}"
+        value="{{ widget.value|default:'' }}"
+
+    >
+
+
+    
+    <!-- Upload Progress -->
+    <div class="upload-progress">
+        <div class="progress-fill"></div>
+    </div>
+    
+    <!-- Status Message -->
+    <span class="upload-status"></span>
+    
+    <!-- Image Preview -->
+    <div class="upload-preview">
+        {% if widget.value %}
+            <img 
+                src="{{ widget.value }}" 
+                alt="Uploaded image"
+                class="uploaded-image"
+                style="max-width: 150px; border-radius: 8px; margin-top: 0.5rem;"
+            >
+        {% endif %}
+    </div>
+    
+    <!-- Upload Instructions -->
+    <div class="upload-instructions" style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;">
+        <p>📸 Click to upload or drag and drop</p>
+        <p>Max file size: 10MB • Formats: JPG, PNG, WebP</p>
+    </div>
+</div>

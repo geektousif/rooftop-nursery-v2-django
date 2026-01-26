@@ -1,0 +1,96 @@
+.imagekit-upload-container {
+    background: #f9fafb;
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    transition: all 0.2s;
+}
+
+.imagekit-upload-container:hover {
+    border-color: #2F5233;
+    background: #f0fdf4;
+}
+
+.imagekit-upload-widget {
+    display: block;
+    width: 100%;
+    padding: 0.5rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.upload-progress {
+    display: none;
+    margin-top: 0.5rem;
+    height: 4px;
+    background: #e5e7eb;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #2F5233;
+    transition: width 0.3s ease;
+    width: 0;
+}
+
+.upload-status {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.upload-status.uploading {
+    color: #2F5233;
+}
+
+.upload-status.success {
+    color: #16a34a;
+}
+
+.upload-status.error {
+    color: #dc2626;
+}
+
+.upload-preview {
+    margin-top: 1rem;
+}
+
+.uploaded-image {
+    max-width: 150px;
+    max-height: 150px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.upload-instructions {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.upload-instructions p {
+    margin: 0.25rem 0;
+}
+
+.inline-related.has-uploaded .imagekit-upload-container {
+    border-color: #16a34a;
+    background: #f0fdf4;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

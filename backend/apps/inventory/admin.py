@@ -21,7 +21,17 @@ class StockAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {"fields": ("id", "variant")}),
-        ("Stock Info", {"fields": ("quantity", "reserved_quantity", "available_quantity", "low_stock_threshold")}),
+        (
+            "Stock Info",
+            {
+                "fields": (
+                    "quantity",
+                    "reserved_quantity",
+                    "available_quantity",
+                    "low_stock_threshold",
+                )
+            },
+        ),
         ("Timestamps", {"fields": ("created_at", "updated_at")}),
     )
 
@@ -56,7 +66,10 @@ class InventoryLogAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {"fields": ("id", "variant", "action_type")}),
-        ("Quantity Changes", {"fields": ("change_quantity", "previous_quantity", "current_quantity")}),
+        (
+            "Quantity Changes",
+            {"fields": ("change_quantity", "previous_quantity", "current_quantity")},
+        ),
         ("Reference", {"fields": ("reference_id", "reference_type")}),
         ("Timestamps", {"fields": ("created_at", "updated_at")}),
     )

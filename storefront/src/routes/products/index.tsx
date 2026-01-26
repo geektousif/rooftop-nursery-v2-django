@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { CustomLoader } from '@/components/common/custom-loader'
-import { ProductsPage } from '@/components/products-page'
+import { ProductsPage } from '@/components/domains/products/products-page'
 import { CartDrawer } from '@/components/domains/cart/cart-drawer'
 import { createFileRoute } from '@tanstack/react-router'
 

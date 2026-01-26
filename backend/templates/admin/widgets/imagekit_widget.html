@@ -1,0 +1,221 @@
+<div x-data="imagekitUploader()" class="imagekit-upload-container"
+     data-product-name="{{ widget.attrs.product_name|default:'' }}"
+     data-variant-name="{{ widget.attrs.variant_name|default:'' }}">
+
+    <input type="text"
+           name="{{ widget.name }}"
+           x-model="imageUrl"
+           value="{{ widget.value|default:'' }}">
+
+    <input type="text"
+           name="{{ widget.name }}"
+           x-model="imageProviderId"
+           value="{{ widget.value|default:'' }}">
+
+    <!-- File input -->
+    <div class="upload-area"
+         @click="$refs.fileInput.click()"
+         :class="{'uploading': uploading, 'has-image': imageUrl}">
+
+        <input type="file"
+               x-ref="fileInput"
+               @change="handleUpload"
+               accept="image/*"
+               class="hidden">
+
+        <!-- Upload UI -->
+        <template x-if="!imageUrl">
+            <div class="upload-placeholder">
+                <svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+                <p class="text-sm text-gray-600" x-show="!uploading">Click to upload image</p>
+                <p class="text-sm text-green-600" x-show="uploading">Uploading...</p>
+            </div>
+        </template>
+
+        <template x-if="imageUrl">
+            <div class="image-preview">
+                <img :src="imageUrl" class="rounded-lg shadow-sm">
+                <button type="button"
+                        @click.stop="removeImage"
+                        class="remove-btn">✕
+                </button>
+            </div>
+        </template>
+    </div>
+
+    <!-- Status message -->
+    <p x-show="error"
+       x-text="error"
+       class="text-sm text-red-600 mt-2"></p>
+</div>
+
+<script>
+
+    function imagekitUploader() {
+        return {
+            imageUrl: '{{ widget.value|default:"" }}',
+            imageProviderId: '{{ widget.value|default:"" }}',
+            uploading: false,
+            error: '',
+
+            async handleUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                // Validate
+                if (!file.type.startsWith('image/')) {
+                    this.error = 'Please select an image file';
+                    return;
+                }
+
+                if (file.size > 10 * 1024 * 1024) {
+                    this.error = 'File must be less than 10MB';
+                    return;
+                }
+
+                try {
+                    this.uploading = true;
+                    this.error = '';
+
+                    // Get product and variant names from data attributes
+                    const container = event.target.closest('.imagekit-upload-container');
+                    console.log(container)
+                    const productName = container.dataset.productName || 'unknown';
+                    const variantName = container.dataset.variantName || 'unknown';
+                    const fileName = `${productName}-${variantName}-${Date.now()}`;
+
+
+                    // Get signature
+                    const upload_auth_sig = await fetch('/admin/api/imagekit-auth/', {
+                        method: 'POST',
+                        headers: {'X-Requested-With': 'XMLHttpRequest'}
+                    }).then(r => r.json());
+
+
+
+
+
+                    const uploadResponse = await ImageKit.upload({
+                        publicKey: upload_auth_sig["public_key"],
+                        urlEndpoint: upload_auth_sig["endpoint"],
+                        file: file,
+                        fileName: fileName,
+                        token: upload_auth_sig.authParams["token"],
+                        signature: upload_auth_sig.authParams["signature"],
+                        expire: upload_auth_sig.authParams["expire"],
+                        folder: upload_auth_sig["folder"]
+                    })
+
+                    // Upload to ImageKit
+
+
+                    // Save URL
+                    this.imageUrl = uploadResponse.url;
+                    this.imageProviderId = uploadResponse.fileId;
+
+                    // Auto-add new inline row if this is the last one
+                    this.triggerAddRow();
+
+                } catch (err) {
+                    this.error = 'Upload failed: ' + err.message;
+                } finally {
+                    this.uploading = false;
+                }
+            },
+
+            removeImage() {
+                this.imageUrl = '';
+                this.imageProviderId = '';
+                this.$refs.fileInput.value = '';
+            },
+
+            triggerAddRow() {
+                // Find if we're in an inline formset
+                const inline = this.$el.closest('.inline-related');
+                if (!inline) return;
+
+                // Check if this is the last row
+                const rows = inline.closest('.inline-group').querySelectorAll('.inline-related');
+                const isLastRow = inline === rows[rows.length - 1];
+
+                triggerAddRow()
+                {
+                    const inline = this.$el.closest('.inline-related');
+                    if (!inline) return;
+
+                    const rows = inline.closest('.inline-group').querySelectorAll('.inline-related');
+                    const isLastRow = inline === rows[rows.length - 1];
+
+                    if (isLastRow) {
+                        const addBtn = inline.closest('.inline-group').querySelector('.add-row a');
+                        if (addBtn) {
+                            setTimeout(() => addBtn.click(), 300);
+                        }
+                    }
+                }
+            }
+        }
+    }
+</script>
+<style>
+    .imagekit-upload-container {
+        margin: 8px 0;
+    }
+
+    .upload-area {
+        border: 2px dashed #d1d5db;
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #f9fafb;
+    }
+
+    .upload-area:hover {
+        border-color: #2F5233;
+        background: #f0fdf4;
+    }
+
+    .upload-area.uploading {
+        border-color: #2F5233;
+        background: #f0fdf4;
+    }
+
+    .upload-area.has-image {
+        padding: 0.5rem;
+        cursor: default;
+    }
+
+    .image-preview {
+        position: relative;
+        display: inline-block;
+    }
+
+    .image-preview img {
+        max-width: 200px;
+        max-height: 200px;
+    }
+
+    .remove-btn {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #ef4444;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 1;
+    }
+
+    .remove-btn:hover {
+        background: #dc2626;
+    }
+</style>
