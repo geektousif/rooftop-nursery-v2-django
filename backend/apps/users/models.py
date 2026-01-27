@@ -2,8 +2,8 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.core.validators import RegexValidator
 from django.db import models
 
-from apps.core.models import BaseModel
 from apps.users.managers import UserManager
+from core.models import BaseModel
 
 # Create your models here.
 
@@ -13,7 +13,7 @@ from apps.users.managers import UserManager
 class User(BaseModel, AbstractBaseUser, PermissionsMixin):
     class UserRoles(models.TextChoices):
         SUPER_ADMIN = "super_admin"
-        ADMIN = "admin"
+        STORE_ADMIN = "store_admin"
         CUSTOMER = "customer"
         VENDOR = "vendors"
 
@@ -40,8 +40,8 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin):
         return self.email or self.phone
 
     @property
-    def is_admin(self):
-        return self.role == self.UserRoles.ADMIN and self.is_staff
+    def is_store_admin(self):
+        return self.role == self.UserRoles.STORE_ADMIN and self.is_staff
 
     @property
     def is_vendor(self):
@@ -50,3 +50,9 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin):
     @property
     def is_customer(self):
         return self.role == self.UserRoles.CUSTOMER
+
+    def can_access_admin_panel(self):
+        return self.is_store_admin or self.is_superuser or self.is_staff
+
+    def can_access_vendor_panel(self):
+        return (self.is_vendor or self.is_store_admin) and hasattr(self, "vendor")

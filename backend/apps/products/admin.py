@@ -22,7 +22,6 @@ class ProductVariantInline(TabularInline):
         "unit",
         "unit_value",
         "is_active",
-        "is_single_unit",
     )
 
 
@@ -71,7 +70,7 @@ class ProductVariantAdmin(ModelAdmin):
         "is_active",
         "created_at",
     )
-    list_filter = ("is_active", "is_single_unit", "product", "created_at")
+    list_filter = ("is_active", "product", "created_at")
     search_fields = ("name", "sku", "product__name")
     readonly_fields = ("id", "created_at", "updated_at")
     ordering = ("product", "display_order")

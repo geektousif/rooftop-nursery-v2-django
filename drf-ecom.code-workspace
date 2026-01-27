@@ -7,7 +7,7 @@
       "path": "storefront"
     },
     {
-      "path": "admin-dashboard"
+      "path": "dashboard"
     }
   ],
   "settings": {

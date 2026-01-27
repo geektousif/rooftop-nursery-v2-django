@@ -1,14 +1,12 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from apps.core.models import BaseModel
+from core.models import BaseModel
 
 
 # Create your models here.
 class Customer(BaseModel):
-    user = models.ForeignKey(
-        "users.User", on_delete=models.CASCADE, null=True, blank=True
-    )
+    user = models.ForeignKey("users.User", on_delete=models.CASCADE, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_guest = models.BooleanField(default=False)
 

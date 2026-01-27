@@ -1,12 +1,14 @@
 from django.db import models
 from django.db.models import F
 
-from apps.core.models import BaseModel
+from core.models import BaseModel
 
 
 # Create your models here.
 class Stock(BaseModel):
-    variant = models.OneToOneField("products.ProductVariant", on_delete=models.CASCADE, related_name="stock")
+    variant = models.OneToOneField(
+        "products.ProductVariant", on_delete=models.CASCADE, related_name="stock"
+    )
     quantity = models.PositiveIntegerField()
     reserved_quantity = models.PositiveIntegerField(default=0)
     low_stock_threshold = models.PositiveIntegerField(default=0)
@@ -37,9 +39,7 @@ class InventoryLog(BaseModel):
         default=InventoryAction.SALE,
     )
     reference_id = models.UUIDField(null=True, blank=True)
-    reference_type = models.CharField(
-        max_length=255, null=True, blank=True
-    )  # order, return
+    reference_type = models.CharField(max_length=255, null=True, blank=True)  # order, return
     previous_quantity = models.PositiveIntegerField()
     current_quantity = models.GeneratedField(
         expression=F("previous_quantity") + F("change_quantity"),

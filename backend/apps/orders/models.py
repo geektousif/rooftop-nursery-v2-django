@@ -1,6 +1,6 @@
 from django.db import models
 
-from apps.core.models import BaseModel
+from core.models import BaseModel
 
 
 # Create your models here.
@@ -20,9 +20,7 @@ class PaymentStatus(models.TextChoices):
 
 
 class Order(BaseModel):
-    customer = models.ForeignKey(
-        "customers.Customer", on_delete=models.SET_NULL, null=True
-    )
+    customer = models.ForeignKey("customers.Customer", on_delete=models.SET_NULL, null=True)
     order_number = models.CharField(max_length=255, unique=True)
     total_quantity = models.PositiveIntegerField()
     subtotal_amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -86,9 +84,7 @@ class OrderItem(BaseModel):
     delivered_at = models.DateTimeField(null=True, blank=True)
     cancellation_reason = models.TextField(null=True, blank=True)
 
-    vendor_payout_amount = models.DecimalField(
-        max_digits=10, decimal_places=2, default=0.0
-    )
+    vendor_payout_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
     vendor_payout_status = models.CharField(
         max_length=255, choices=PaymentStatus.choices, default=OrderStatus.PENDING
     )

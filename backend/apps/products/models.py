@@ -1,16 +1,19 @@
 from django.db import models
 
-from apps.core.models import BaseModel
+from core.models import BaseModel
 
 
 class Product(BaseModel):
     """
-    Base Product (For Overview details only)
+    Base Product
+    Logical product grouping (NOT directly sellable).
+    Used for: Cataloging, grouping variants, SEO
     """
 
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
     description = models.TextField()
+
     attributes = models.JSONField(default=dict)
     tags = models.JSONField(default=list)
 
@@ -43,24 +46,53 @@ class Product(BaseModel):
 
 class ProductVariant(BaseModel):
     """
-    Sellable Entities
+    Sellable SKU (THIS is what customers buy).
+    Example: "Lotus Bulb - Pink (1 piece)", "Tomato Seeds - Hybrid (50g)"
     """
 
     product = models.ForeignKey("products.Product", on_delete=models.CASCADE)
+
     name = models.CharField(max_length=255)
     sku = models.CharField(max_length=255, unique=True)
+
     price = models.DecimalField(max_digits=10, decimal_places=2)
     mrp = models.DecimalField(max_digits=10, decimal_places=2)  # Compared Price
     cost_price = models.DecimalField(
         max_digits=10, decimal_places=2
     )  # For Internal Profit Calculation
-    display_order = models.PositiveIntegerField()
+
+    # Variant attributes (color, size, weight)
+    variant_attributes = models.JSONField(default=dict)
+
     weight_grams = models.PositiveIntegerField()
     unit = models.CharField(max_length=255)
     unit_value = models.DecimalField(max_digits=10, decimal_places=2)
 
+    display_order = models.PositiveIntegerField()
     is_active = models.BooleanField(default=True)
-    is_single_unit = models.BooleanField(default=False)
+
+    # is_single_unit = models.BooleanField(default=False)
+
+    # def save(self, *args, **kwargs):
+    #     if self.is_single_unit:
+    #         if ProductVariant.objects.filter(product=self.product).count() >= 1:
+    #             return
+
+    #     super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.product.name} - {self.name}"
+
+    @property
+    def full_name(self):
+        """Lotus Bulb - Pink (1 piece)"""
+        return f"{self.product.name} - {self.name} ({self.unit_value} {self.unit})"
+
+    @property
+    def discount_percentage(self):
+        if self.mrp > self.price:
+            return int(((self.mrp - self.price) / self.mrp) * 100)
+        return 0
 
     class Meta(BaseModel.Meta):
         unique_together = ["product", "sku"]
@@ -73,16 +105,7 @@ class ProductVariant(BaseModel):
             ),
             models.Index(fields=["product"], name="idx_product_variant_product"),
         ]
-
-    # def save(self, *args, **kwargs):
-    #     if self.is_single_unit:
-    #         if ProductVariant.objects.filter(product=self.product).count() >= 1:
-    #             return
-
-    #     super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.product.name} - {self.name}"
+        ordering = ["product", "display_order"]
 
 
 class ProductReview(BaseModel):
@@ -100,6 +123,4 @@ class ProductReview(BaseModel):
 
     class Meta(BaseModel.Meta):
         unique_together = ["product", "customer"]
-        indexes = [
-            models.Index(fields=["product", "customer"], name="idx_product_customer")
-        ]
+        indexes = [models.Index(fields=["product", "customer"], name="idx_product_customer")]

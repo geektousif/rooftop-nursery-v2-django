@@ -1,7 +1,7 @@
 from django.db import models
 
-from apps.core.models import BaseModel
 from apps.orders.models import PaymentStatus
+from core.models import BaseModel
 
 
 # Create your models here.
@@ -42,7 +42,5 @@ class Payment(BaseModel):
         unique_together = ("order", "gateway_order_id")
         indexes = [
             models.Index(fields=["order"], name="idx_payment_order"),
-            models.Index(
-                fields=["gateway_order_id"], name="idx_payment_gateway_order_id"
-            ),
+            models.Index(fields=["gateway_order_id"], name="idx_payment_gateway_order_id"),
         ]

@@ -1,12 +1,9 @@
+from logging import getLogger
+
 from django import forms
 
 from apps.images.models import ProductImage
 from apps.images.widgets import ImageKitUploadWidget as ImageKitWidget
-
-
-from logging import getLogger
-
-from apps.products.models import ProductVariant
 
 log = getLogger(__name__)
 
@@ -59,9 +56,6 @@ class ProductImageForm(forms.ModelForm):
     #
     #         # Creating new image inside variant admin
     #     print(self.attrs)
-
-
-
 
     # def save(self, commit=True):
     #     instance = super().save(commit=False)

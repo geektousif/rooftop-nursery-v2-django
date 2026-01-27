@@ -1,13 +1,13 @@
 from django.db import models
 
-from apps.core.models import BaseModel
+from core.models import BaseModel
 
 
 # Create your models here.
 class ProductImage(BaseModel):
     # TODO: add background job for image cleanup after product deletion
     variant = models.ForeignKey(
-        "products.ProductVariant", on_delete=models.SET_NULL, null=True
+        "products.ProductVariant", on_delete=models.SET_NULL, null=True, related_name="images"
     )
     image_url = models.URLField()
     image_provider_id = models.CharField(max_length=255, blank=True, null=True)
@@ -16,6 +16,10 @@ class ProductImage(BaseModel):
 
     class Meta(BaseModel.Meta):
         unique_together = ["variant", "display_order"]
+        indexes = [
+            models.Index(fields=["variant", "is_display_image"]),
+        ]
+        ordering = ["variant", "display_order"]
 
     def __str__(self):
         if self.variant:

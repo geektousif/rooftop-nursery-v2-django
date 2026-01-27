@@ -1,7 +1,7 @@
 from django.db import models
 from treenode.models import TreeNodeModel
 
-from apps.core.models import BaseModel
+from core.models import BaseModel
 
 
 # Create your models here.

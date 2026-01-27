@@ -7,7 +7,7 @@ from rest_framework import filters, viewsets
 
 from apps.images.models import ProductImage
 from apps.images.serializers import ProductImageSerializer
-from core.config import env
+from config.env import env
 
 
 @csrf_exempt
