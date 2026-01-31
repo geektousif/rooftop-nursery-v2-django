@@ -1,11 +1,12 @@
+"""
+Main URLs for Payments app - includes all role-based URL configurations.
+"""
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-
-from apps.payments.views import PaymentViewSet
-
-router = DefaultRouter()
-router.register(r'payments', PaymentViewSet, basename='payment')
 
 urlpatterns = [
-    path('', include(router.urls)),
+    # Public endpoints (no authentication required)
+    path('public/', include('apps.payments.urls.public')),
+    
+    # Admin endpoints (authentication + admin role required)
+    path('admin/', include('apps.payments.urls.admin')),
 ]

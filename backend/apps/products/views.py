@@ -1,6 +1,11 @@
+import logging
+
+from django.db.models.query import QuerySet
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 from silk.profiling.profiler import silk_profile
 
 from apps.products.filters import build_product_filters
@@ -15,10 +20,19 @@ from apps.products.selectors import (
     search_variants,
 )
 from apps.products.serializers import (
+    ProductCreateSerializer,
+    ProductSerializer,
+    ProductUpdateSerializer,
+    VariantCreateSerializer,
     VariantDetailSerializer,
     VariantListSerializer,
+    VariantUpdateSerializer,
 )
+from core.exceptions import ProductNotFoundError
 from core.pagination import CursorPagination
+from core.permissions import IsOwnerOrAdmin
+
+logger = logging.getLogger(__name__)
 
 
 class VariantListAPIView(APIView):
@@ -106,6 +120,251 @@ class ProductSearchAPIView(APIView):
         serializer = VariantListSerializer(variants, many=True)
 
         return Response({"query": query, "count": len(variants), "results": serializer.data})
+
+
+class ProductViewSet(ModelViewSet):
+    permission_classes = [IsOwnerOrAdmin]
+
+    owner = "vendor"
+
+    def get_serializer_class(self):
+        # Different serializers for different actions
+        if self.action == "create":
+            return ProductCreateSerializer
+        elif self.action == "update":
+            return ProductUpdateSerializer
+        elif self.action == "retrieve":
+            return VariantDetailSerializer
+        return ProductSerializer
+
+    def get_queryset(self) -> QuerySet:
+        if self.request.user.can_access_admin_panel():
+            return super().get_queryset()
+
+        return super().get_queryset().filter(vendor=self.request.user.vendor)
+
+    @silk_profile(name="product-list")
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @extend_schema(
+        summary="Create product (admin and vendor)",
+        request=ProductCreateSerializer,
+        responses={
+            201: VariantDetailSerializer,
+            400: {"description": "Validation error"},
+            403: {"description": "Not a vendor"},
+        },
+    )
+    def create(self, request, *args, **kwargs) -> Response:
+        """Create a new product with variants."""
+        serializer = ProductCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            # Get vendor from authenticated user
+            vendor = request.user.vendor if hasattr(request.user, "vendor") else None
+            if not vendor:
+                return Response({"error": "User is not a vendor"}, status=status.HTTP_403_FORBIDDEN)
+
+            # Service handles business logic
+            from apps.products.services import product_create
+
+            product = product_create(
+                vendor=vendor,
+                name=serializer.validated_data["name"],
+                description=serializer.validated_data.get("description"),
+                category_ids=serializer.validated_data["category_ids"],
+                attributes=serializer.validated_data.get("attributes"),
+                tags=serializer.validated_data.get("tags"),
+                variants=serializer.validated_data["variants"],
+                is_active=serializer.validated_data.get("is_active", True),
+            )
+
+            # Use ProductDetailSerializer to show product + variants
+            output_serializer = VariantDetailSerializer(product)
+
+            return Response(output_serializer.data, status=status.HTTP_201_CREATED)
+        except ValueError as e:
+            logger.error(f"Product creation failed: {e}")
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Product creation failed: {e}", exc_info=True)
+            return Response(
+                {"error": "Failed to create product"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def update(self, request, *args, **kwargs):
+        serializer = ProductUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            # Get vendor from authenticated user
+            vendor = request.user.vendor if hasattr(request.user, "vendor") else None
+            if not vendor:
+                return Response({"error": "User is not a vendor"}, status=status.HTTP_403_FORBIDDEN)
+
+            # Service handles business logic
+            from apps.products.services import product_update
+
+            product = product_update(
+                product_id=kwargs["pk"],
+                name=serializer.validated_data["name"],
+                description=serializer.validated_data.get("description"),
+                category_ids=serializer.validated_data["category_ids"],
+                attributes=serializer.validated_data.get("attributes"),
+                tags=serializer.validated_data.get("tags"),
+                is_active=serializer.validated_data.get("is_active", True),
+            )
+
+            # Use ProductDetailSerializer to show product + variants
+            output_serializer = ProductUpdateSerializer(product)
+
+            return Response(output_serializer.data, status=status.HTTP_200_OK)
+        except ValueError as e:
+            logger.error(f"Product update failed: {e}")
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Product update failed: {e}", exc_info=True)
+            return Response(
+                {"error": "Failed to update product"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            # Get vendor from authenticated user
+            vendor = request.user.vendor if hasattr(request.user, "vendor") else None
+            if not vendor:
+                return Response({"error": "User is not a vendor"}, status=status.HTTP_403_FORBIDDEN)
+
+            # Service handles business logic
+            from apps.products.services import product_delete
+
+            product_delete(product_id=kwargs["pk"])
+
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except ProductNotFoundError:
+            return Response({"error": "Product not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            logger.error(f"Product deletion failed: {e}", exc_info=True)
+            return Response(
+                {"error": "Failed to delete product"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class VariantViewSet(ModelViewSet):
+    serializer_class = VariantCreateSerializer
+    permission_classes = [IsOwnerOrAdmin]
+    owner = ["product.vendor"]
+
+    def get_queryset(self):
+        return ProductVariant.objects.filter(product=self.kwargs["product_pk"])
+
+    def get_serializer_class(self):
+        # Different serializers for different actions
+        if self.action == "update":
+            return VariantUpdateSerializer
+        return VariantCreateSerializer
+
+    def create(self, request, *args, **kwargs):
+        try:
+            # Get vendor from authenticated user
+            vendor = request.user.vendor if hasattr(request.user, "vendor") else None
+            if not vendor:
+                return Response({"error": "User is not a vendor"}, status=status.HTTP_403_FORBIDDEN)
+
+            # Service handles business logic
+            from apps.products.services import variant_create
+
+            variant = variant_create(
+                product_id=kwargs["product_pk"],
+                name=request.data["name"],
+                sku=request.data["sku"],
+                price=request.data["price"],
+                mrp=request.data["mrp"],
+                cost_price=request.data.get("cost_price"),
+                weight_grams=request.data.get("weight_grams"),
+                unit=request.data.get("unit"),
+                unit_value=request.data.get("unit_value"),
+                variant_attributes=request.data.get("variant_attributes"),
+                display_order=request.data.get("display_order", 0),
+                is_active=request.data.get("is_active", True),
+            )
+
+            # Use ProductDetailSerializer to show product + variants
+            output_serializer = VariantDetailSerializer(variant)
+
+            return Response(output_serializer.data, status=status.HTTP_201_CREATED)
+        except ValueError as e:
+            logger.error(f"Variant creation failed: {e}")
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Variant creation failed: {e}", exc_info=True)
+            return Response(
+                {"error": "Failed to create variant"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def update(self, request, *args, **kwargs):
+        serializer = VariantUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            # Get vendor from authenticated user
+            vendor = request.user.vendor if hasattr(request.user, "vendor") else None
+            if not vendor:
+                return Response({"error": "User is not a vendor"}, status=status.HTTP_403_FORBIDDEN)
+
+            # Service handles business logic
+            from apps.products.services import variant_update
+
+            variant = variant_update(
+                variant_id=kwargs["pk"],
+                name=serializer.validated_data["name"],
+                sku=serializer.validated_data["sku"],
+                price=serializer.validated_data["price"],
+                mrp=serializer.validated_data["mrp"],
+                cost_price=serializer.validated_data.get("cost_price"),
+                weight_grams=serializer.validated_data.get("weight_grams"),
+                unit=serializer.validated_data.get("unit"),
+                unit_value=serializer.validated_data.get("unit_value"),
+                variant_attributes=serializer.validated_data.get("variant_attributes"),
+                display_order=serializer.validated_data.get("display_order", 0),
+                is_active=serializer.validated_data.get("is_active", True),
+            )
+
+            # Use ProductDetailSerializer to show product + variants
+            output_serializer = VariantDetailSerializer(variant)
+
+            return Response(output_serializer.data, status=status.HTTP_200_OK)
+        except ValueError as e:
+            logger.error(f"Variant update failed: {e}")
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Variant update failed: {e}", exc_info=True)
+            return Response(
+                {"error": "Failed to update variant"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            # Get vendor from authenticated user
+            vendor = request.user.vendor if hasattr(request.user, "vendor") else None
+            if not vendor:
+                return Response({"error": "User is not a vendor"}, status=status.HTTP_403_FORBIDDEN)
+
+            # Service handles business logic
+            from apps.products.services import variant_delete
+
+            variant_delete(variant_id=kwargs["pk"])
+
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except ProductNotFoundError:
+            return Response({"error": "Variant not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            logger.error(f"Variant deletion failed: {e}", exc_info=True)
+            return Response(
+                {"error": "Failed to delete variant"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 # class ProductListAPIView(APIView):

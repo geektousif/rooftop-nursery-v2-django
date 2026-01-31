@@ -7,9 +7,12 @@ import Header from '../components/Header'
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 
 import type { QueryClient } from '@tanstack/react-query'
+import type { AuthState } from '@/features/auth/auth.provider'
+import { Toaster } from '@/components/ui/sonner'
 
 interface MyRouterContext {
   queryClient: QueryClient
+  auth: AuthState
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
@@ -29,6 +32,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
           TanStackQueryDevtools,
         ]}
       />
+      <Toaster richColors />
     </>
   ),
 })

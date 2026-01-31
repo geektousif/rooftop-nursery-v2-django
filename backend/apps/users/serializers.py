@@ -1,6 +1,8 @@
+from auth_kit.serializers.user import UserSerializer as BaseUserSerializer
 from rest_framework import serializers
 
 from apps.users.models import User
+from core.permissions import get_user_permissions
 
 
 class UserListSerializer(serializers.ModelSerializer):
@@ -47,38 +49,50 @@ class LoginSerializer(serializers.Serializer):
         fields = ["email", "password"]
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(BaseUserSerializer):
     """Full serializer for User."""
 
-    class Meta:
+    full_name = serializers.CharField()
+    role = serializers.CharField()
+    is_active = serializers.BooleanField()
+    is_staff = serializers.BooleanField()
+    email = serializers.EmailField()
+    permissions = serializers.SerializerMethodField()
+
+    class Meta(BaseUserSerializer.Meta):
         model = User
         fields = [
             "id",
             "email",
-            "phone",
             "full_name",
             "role",
             "is_active",
             "is_staff",
-            "created_at",
-            "updated_at",
+            "permissions",
         ]
-        read_only_fields = ["id", "created_at", "updated_at"]
-        extra_kwargs = {"password": {"write_only": True, "required": False}}
 
-    def create(self, validated_data):
-        password = validated_data.pop("password", None)
-        user = User.objects.create(**validated_data)
-        if password:
-            user.set_password(password)
-            user.save()
-        return user
+    def get_permissions(self, obj):
+        return get_user_permissions(obj)
 
-    def update(self, instance, validated_data):
-        password = validated_data.pop("password", None)
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        if password:
-            instance.set_password(password)
-        instance.save()
-        return instance
+    def get_full_name(self, obj):
+        return obj.full_name
+
+    def get_role_display(self, obj):
+        return obj.role
+
+    # def create(self, validated_data):
+    #     password = validated_data.pop("password", None)
+    #     user = User.objects.create(**validated_data)
+    #     if password:
+    #         user.set_password(password)
+    #         user.save()
+    #     return user
+
+    # def update(self, instance, validated_data):
+    #     password = validated_data.pop("password", None)
+    #     for attr, value in validated_data.items():
+    #         setattr(instance, attr, value)
+    #     if password:
+    #         instance.set_password(password)
+    #     instance.save()
+    #     return instance

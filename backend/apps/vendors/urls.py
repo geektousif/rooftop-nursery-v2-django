@@ -1,11 +1,14 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+"""
+Main URLs for Vendors app - includes all role-based URL configurations.
+"""
 
-from apps.vendors.views import VendorViewSet
-
-router = DefaultRouter()
-router.register(r'vendors', VendorViewSet, basename='vendor')
+from django.urls import include, path
 
 urlpatterns = [
-    path('', include(router.urls)),
+    # Public endpoints (no authentication required)
+    path("public/", include("apps.vendors.urls.public")),
+    # Vendor endpoints (authentication + vendor role required)
+    path("vendor/", include("apps.vendors.urls.vendor")),
+    # Admin endpoints (authentication + admin role required)
+    path("admin/", include("apps.vendors.urls.admin")),
 ]

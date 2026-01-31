@@ -1,6 +1,14 @@
 from rest_framework import serializers
 
+from apps.products.models import Product
+
 # from apps.categories.serializers import CategoryListSerializer
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = "__all__"
 
 
 class ProductImageSerializer(serializers.Serializer):
@@ -168,3 +176,92 @@ class VariantDetailSerializer(serializers.Serializer):
         # This should be passed from view (already queried)
         siblings = self.context.get("sibling_variants", [])
         return SiblingVariantSerializer(siblings, many=True).data
+
+
+# variant dict schema
+# @dataclass
+# class VariantSchema:
+#     name: str = ""
+#     sku: str = ""
+#     price: float = 0.0
+#     mrp: float = 0.0
+#     cost_price: Optional[float] = None
+#     weight_grams: Optional[int] = None
+#     unit: str = ""
+#     unit_value: float = 0.0
+#     variant_attributes: Optional[dict] = {}
+#     display_order: Optional[int] = 0
+#     is_active: bool = True
+
+
+class VariantCreateSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=255)
+    sku = serializers.CharField(max_length=255)
+    price = serializers.DecimalField(max_digits=10, decimal_places=2)
+    mrp = serializers.DecimalField(max_digits=10, decimal_places=2)
+    cost_price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    weight_grams = serializers.IntegerField(required=False)
+    unit = serializers.CharField(max_length=255)
+    unit_value = serializers.DecimalField(max_digits=10, decimal_places=2)
+    variant_attributes = serializers.JSONField(default=dict, required=False)
+    display_order = serializers.IntegerField(default=1)
+    is_active = serializers.BooleanField(default=True)
+
+
+class ProductCreateSerializer(serializers.Serializer):
+    """
+    Payload for creating a new product with variant.
+    """
+
+    name = serializers.CharField(max_length=255)
+    description = serializers.CharField()
+    category_ids = serializers.ListField(child=serializers.UUIDField(), min_length=1)
+    attributes = serializers.JSONField(required=False, default=dict)
+    tags = serializers.ListField(child=serializers.CharField(), required=False, default=list)
+    is_active = serializers.BooleanField(default=True)
+    # Variants (nested creation)
+    variants = serializers.ListField(child=VariantCreateSerializer(), min_length=1)
+
+    # def validate_variants(self, value):
+    #     """Validate variant structure."""
+    #     for variant in value:
+    #         required_fields = ["name", "sku", "price", "mrp", "unit", "unit_value"]
+    #         for field in required_fields:
+    #             if field not in variant:
+    #                 raise serializers.ValidationError(f"Variant missing required field: {field}")
+    #     return value
+
+    def validate_category_ids(self, value):
+        """Ensure categories exist."""
+        from apps.categories.models import Category
+
+        existing = Category.objects.filter(id__in=value).count()
+        if existing != len(value):
+            raise serializers.ValidationError("Some categories do not exist")
+
+        return value
+
+
+class ProductUpdateSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=255)
+    description = serializers.CharField()
+    attributes = serializers.JSONField(required=False, default=dict)
+    tags = serializers.ListField(child=serializers.CharField(), required=False, default=list)
+    is_active = serializers.BooleanField(default=True)
+    category_ids = serializers.ListField(
+        child=serializers.UUIDField(), required=False, default=list
+    )
+
+    def validate_category_ids(self, value):
+        """Ensure categories exist."""
+        from apps.categories.models import Category
+
+        existing = Category.objects.filter(id__in=value).count()
+        if existing != len(value):
+            raise serializers.ValidationError("Some categories do not exist")
+
+        return value
+
+
+class VariantUpdateSerializer(VariantCreateSerializer):
+    pass

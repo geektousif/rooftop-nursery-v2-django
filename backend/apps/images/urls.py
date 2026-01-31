@@ -1,11 +1,11 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from django.urls import path
 
-from apps.images.views import ProductImageViewSet
+# from rest_framework.routers import DefaultRouter
+from apps.images.views import imagekit_auth_view
 
-router = DefaultRouter()
-router.register(r'product-images', ProductImageViewSet, basename='product-image')
+# router = DefaultRouter()
+# router.register(r"product-images", ProductImageViewSet, basename="product-image")
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("sign/", imagekit_auth_view, name="imagekit-auth"),
 ]

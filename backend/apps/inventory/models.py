@@ -31,7 +31,7 @@ class InventoryLog(BaseModel):
         ADJUSTMENT = "adjustment"
         RESERVE = "reserve"
 
-    variant = models.ForeignKey("products.ProductVariant", on_delete=models.CASCADE)
+    stock = models.ForeignKey("inventory.Stock", on_delete=models.CASCADE, related_name="logs")
     change_quantity = models.IntegerField()  # +ve for sale, -ve for return
     action_type = models.CharField(
         max_length=255,
@@ -48,7 +48,7 @@ class InventoryLog(BaseModel):
     )
 
     def __str__(self):
-        return f"{self.variant.product.name} - {self.variant.name}"
+        return f"{self.stock.variant.product.name} - {self.stock.variant.name}"
 
     class Meta(BaseModel.Meta):
         ordering = ["-created_at"]

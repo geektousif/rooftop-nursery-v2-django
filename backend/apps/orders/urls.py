@@ -1,12 +1,18 @@
+"""
+Main URLs for Orders app - includes all role-based URL configurations.
+"""
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-
-from apps.orders.views import OrderViewSet, OrderItemViewSet
-
-router = DefaultRouter()
-router.register(r'orders', OrderViewSet, basename='order')
-router.register(r'order-items', OrderItemViewSet, basename='order-item')
 
 urlpatterns = [
-    path('', include(router.urls)),
+    # Public endpoints (no authentication required)
+    path('public/', include('apps.orders.urls.public')),
+    
+    # Customer endpoints (authentication + customer role required)
+    path('customer/', include('apps.orders.urls.customer')),
+    
+    # Vendor endpoints (authentication + vendor role required)
+    path('vendor/', include('apps.orders.urls.vendor')),
+    
+    # Admin endpoints (authentication + admin role required)
+    path('admin/', include('apps.orders.urls.admin')),
 ]

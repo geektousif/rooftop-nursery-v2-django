@@ -1,12 +1,12 @@
+"""
+Main URLs for Customers app - includes all role-based URL configurations.
+"""
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-
-from apps.customers.views import CustomerViewSet, AddressViewSet
-
-router = DefaultRouter()
-router.register(r'customers', CustomerViewSet, basename='customer')
-router.register(r'addresses', AddressViewSet, basename='address')
 
 urlpatterns = [
-    path('', include(router.urls)),
+    # Customer endpoints (authentication + customer role required)
+    path('customer/', include('apps.customers.urls.customer')),
+    
+    # Admin endpoints (authentication + admin role required)
+    path('admin/', include('apps.customers.urls.admin')),
 ]

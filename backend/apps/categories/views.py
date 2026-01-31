@@ -1,5 +1,7 @@
 from django.forms import model_to_dict
 from django.http import HttpResponseNotFound, JsonResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from treenode.views.autoapi import AutoTreeAPI
 from treenode.views.crud import TreeNodeBaseAPIView
 
@@ -32,7 +34,9 @@ class AdminTreeAPI(AutoTreeAPI):
         )
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class CategoryTreeNodeAPIView(TreeNodeBaseAPIView):
+
     model = Category
 
     def get(self, request, pk=None):

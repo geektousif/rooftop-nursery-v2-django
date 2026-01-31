@@ -2,6 +2,13 @@
 
 @import 'tw-animate-css';
 
+@import 'tw-animate-css';
+
+@import 'shadcn/tailwind.css';
+
+@import '@fontsource-variable/nunito';
+@import '@fontsource-variable/playfair-display';
+
 @custom-variant dark (&:is(.dark *));
 
 body {
@@ -19,77 +26,107 @@ code {
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
+  --card-foreground: oklch(0.25 0.01 60);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.006 285.885);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.871 0.006 286.286);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
+  --popover-foreground: oklch(0.25 0.01 60);
+  --primary: oklch(0.38 0.04 145);
+  --primary-foreground: oklch(0.985 0.01 85);
+  --secondary: oklch(0.75 0.12 45);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.97 0.01 100);
+  --muted-foreground: oklch(0.55 0.02 60);
+  --accent: oklch(0.65 0.14 130);
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.63 0.26 29);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.92 0.01 85);
+  --input: oklch(0.92 0.01 85);
+  --ring: oklch(0.38 0.04 145);
+  --chart-1: oklch(0.871 0.15 154.449);
+  --chart-2: oklch(0.723 0.219 149.579);
+  --chart-3: oklch(0.627 0.194 149.214);
+  --chart-4: oklch(0.527 0.154 150.069);
+  --chart-5: oklch(0.448 0.119 151.328);
+  --radius: 0.75rem;
   --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-primary: oklch(0.21 0.006 285.885);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.871 0.006 286.286);
+  --sidebar-foreground: oklch(0.25 0.01 60);
+  --sidebar-primary: oklch(0.38 0.04 145);
+  --sidebar-primary-foreground: oklch(0.985 0.01 85);
+  --sidebar-accent: oklch(0.65 0.14 130);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(0.92 0.01 85);
+  --sidebar-ring: oklch(0.38 0.04 145);
+  --background: oklch(0.985 0.01 85); /* Warm White */
+  --foreground: oklch(0.25 0.01 60);
+
+  /* Status Colors */
+  --success: oklch(0.65 0.18 145);
+  --success-foreground: oklch(1 0 0);
+
+  --warning: oklch(0.85 0.18 85);
+  --warning-foreground: oklch(0.25 0.01 60);
+
+  --info: oklch(0.6 0.18 250);
+  --info-foreground: oklch(1 0 0);
+
+  /* Gradient definitions for use in components */
+  --gradient-primary-val: linear-gradient(
+    135deg,
+    oklch(0.38 0.04 145) 0%,
+    oklch(0.65 0.14 130) 100%
+  );
+  --gradient-secondary-val: linear-gradient(
+    135deg,
+    oklch(0.75 0.12 45) 0%,
+    oklch(0.85 0.1 45) 100%
+  );
 }
 
 .dark {
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.141 0.005 285.823);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.141 0.005 285.823);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.21 0.006 285.885);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.274 0.006 286.033);
-  --input: oklch(0.274 0.006 286.033);
-  --ring: oklch(0.442 0.017 285.786);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.274 0.006 286.033);
-  --sidebar-ring: oklch(0.442 0.017 285.786);
+  --background: oklch(0.18 0.01 40);
+  --foreground: oklch(0.985 0.01 85);
+
+  --card: oklch(0.22 0.01 40);
+  --card-foreground: oklch(0.985 0.01 85);
+
+  --popover: oklch(0.22 0.01 40);
+  --popover-foreground: oklch(0.985 0.01 85);
+
+  --primary: oklch(0.65 0.14 130); /* Ligher green for dark mode */
+  --primary-foreground: oklch(0.18 0.01 40);
+
+  --secondary: oklch(0.75 0.12 45);
+  --secondary-foreground: oklch(1 0 0);
+
+  --accent: oklch(0.45 0.08 135);
+  --accent-foreground: oklch(1 0 0);
+
+  --muted: oklch(0.28 0.01 40);
+  --muted-foreground: oklch(0.75 0.01 85);
+
+  --destructive: oklch(0.55 0.22 27);
+  --destructive-foreground: oklch(1 0 0);
+
+  --border: oklch(0.3 0.01 40);
+  --input: oklch(0.3 0.01 40);
+  --ring: oklch(0.65 0.14 130);
+
+  --sidebar-background: oklch(0.2 0.01 40);
+  --sidebar-foreground: oklch(0.985 0.01 85);
+  --sidebar-primary: oklch(0.65 0.14 130);
+  --sidebar-primary-foreground: oklch(0.18 0.01 40);
+  --sidebar-accent: oklch(0.45 0.08 135);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(0.3 0.01 40);
+  --sidebar-ring: oklch(0.65 0.14 130);
 }
 
 @theme inline {
+  /* Typography */
+  --font-sans: 'Nunito', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Playfair Display', ui-serif, Georgia, serif;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -126,13 +163,139 @@ code {
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  /* Custom Token Mappings */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  /* Shadows */
+  --shadow-card: 0 2px 8px -2px rgb(0 0 0 / 0.08);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-serif font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  .card-elevated {
+    @apply bg-card rounded-xl shadow-card border border-border/50 transition-all duration-150;
+  }
+
+  .card-elevated:hover {
+    @apply shadow-lg;
+  }
+
+  /* Using inline styles for complex gradients or defined variables 
+     to avoid complexity in utility class composition 
+  */
+  .btn-primary-gradient {
+    background: var(--gradient-primary-val);
+    @apply text-primary-foreground font-medium rounded-xl px-6 py-2.5 transition-all duration-150 hover:opacity-90 hover:shadow-md;
+  }
+
+  .btn-secondary-gradient {
+    background: var(--gradient-secondary-val);
+    @apply text-secondary-foreground font-medium rounded-xl px-6 py-2.5 transition-all duration-150 hover:opacity-90 hover:shadow-md;
+  }
+
+  .input-styled {
+    @apply bg-background border-input border rounded-xl px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-150;
+  }
+
+  .badge-success {
+    @apply bg-success/10 text-success px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-warning {
+    @apply bg-warning/10 text-warning px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-danger {
+    @apply bg-destructive/10 text-destructive px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-info {
+    @apply bg-info/10 text-info px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  .sidebar-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground transition-all duration-150 hover:bg-muted hover:text-foreground;
+  }
+
+  .sidebar-item-active {
+    @apply bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground;
+  }
+
+  .table-header {
+    @apply bg-muted/50 text-muted-foreground text-sm font-semibold uppercase tracking-wider;
+  }
+
+  .skeleton {
+    @apply bg-muted animate-pulse rounded-lg;
+  }
+}
+
+/* -----------------------------------------
+  UTILITIES
+  -----------------------------------------
+*/
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--muted) transparent;
+  }
+
+  /* Note: Pseudo-elements in @layer utilities need correct targeting in v4.
+     Standard CSS nesting is often preferred now.
+  */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: color-mix(
+      in oklch,
+      var(--muted-foreground),
+      transparent 70%
+    );
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(
+      in oklch,
+      var(--muted-foreground),
+      transparent 50%
+    );
   }
 }

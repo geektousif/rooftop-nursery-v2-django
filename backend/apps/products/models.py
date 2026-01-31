@@ -12,10 +12,10 @@ class Product(BaseModel):
 
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
-    description = models.TextField()
+    description = models.TextField(null=True, blank=True)
 
-    attributes = models.JSONField(default=dict)
-    tags = models.JSONField(default=list)
+    attributes = models.JSONField(default=dict, null=True, blank=True)
+    tags = models.JSONField(default=list, null=True, blank=True)
 
     vendor = models.ForeignKey(
         "vendors.Vendor",
@@ -23,7 +23,6 @@ class Product(BaseModel):
     )
     category = models.ManyToManyField("categories.Category", related_name="products")
 
-    is_active = models.BooleanField(default=True)
     # is_featured = models.BooleanField(default=False)
     # TODO suggest in frontend
     # def save(self, *args, **kwargs):
@@ -58,18 +57,17 @@ class ProductVariant(BaseModel):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     mrp = models.DecimalField(max_digits=10, decimal_places=2)  # Compared Price
     cost_price = models.DecimalField(
-        max_digits=10, decimal_places=2
+        max_digits=10, decimal_places=2, blank=True, null=True
     )  # For Internal Profit Calculation
 
     # Variant attributes (color, size, weight)
     variant_attributes = models.JSONField(default=dict)
 
-    weight_grams = models.PositiveIntegerField()
-    unit = models.CharField(max_length=255)
-    unit_value = models.DecimalField(max_digits=10, decimal_places=2)
+    weight_grams = models.PositiveIntegerField(null=True, blank=True)
+    unit = models.CharField(max_length=255, blank=True, null=True)
+    unit_value = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
 
-    display_order = models.PositiveIntegerField()
-    is_active = models.BooleanField(default=True)
+    display_order = models.PositiveIntegerField(null=True, blank=True)
 
     # is_single_unit = models.BooleanField(default=False)
 

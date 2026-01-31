@@ -7,7 +7,7 @@ from core.models import BaseModel
 # Create your models here.
 class Customer(BaseModel):
     user = models.ForeignKey("users.User", on_delete=models.CASCADE, null=True, blank=True)
-    is_active = models.BooleanField(default=True)
+
     is_guest = models.BooleanField(default=False)
 
     class Meta(BaseModel.Meta):

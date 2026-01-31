@@ -23,7 +23,6 @@ class Coupon(BaseModel):
     applies_to_specific_products = models.ManyToManyField(
         "products.ProductVariant", blank=True, related_name="coupons", null=True
     )
-    is_active = models.BooleanField(default=True)
 
     class Meta(BaseModel.Meta):
         ordering = ["-created_at"]

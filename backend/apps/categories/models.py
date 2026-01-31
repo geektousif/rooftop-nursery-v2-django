@@ -11,7 +11,6 @@ class Category(TreeNodeModel, BaseModel):  # type: ignore
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True)
     code = models.CharField(max_length=255, unique=True)
-    is_active = models.BooleanField(default=True)
     # parent_id = models.ForeignKey(
     #     "self", on_delete=models.SET_NULL, null=True, blank=True
     # )

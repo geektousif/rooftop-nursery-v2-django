@@ -22,6 +22,7 @@ class VendorAdmin(admin.ModelAdmin):
         (None, {"fields": ("id", "user", "business_name")}),
         ("Commission", {"fields": ("commission_rate",)}),
         ("Approval", {"fields": ("is_approved", "approved_at")}),
+        ("Platform Vendor", {"fields": ("is_platform_vendor",)}),
         ("Timestamps", {"fields": ("created_at", "updated_at")}),
     )
 

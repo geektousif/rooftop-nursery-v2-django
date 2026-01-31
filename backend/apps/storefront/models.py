@@ -19,7 +19,6 @@ class Banner(BaseModel):
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     sort_order = models.PositiveIntegerField()
-    is_active = models.BooleanField(default=True)
 
     class Meta(BaseModel.Meta):
         ordering = ["-created_at"]
@@ -32,4 +31,3 @@ class StorefrontSetting(BaseModel):
     value = models.TextField()
     type = models.CharField(max_length=20)  # string, boolean, number, json
     description = models.TextField()
-    is_active = models.BooleanField(default=True)

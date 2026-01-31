@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 
 from django.utils.translation import gettext_lazy as _
@@ -87,7 +88,6 @@ LOCAL_APPS = [
     "apps.coupons",
     "apps.webhooks",
     "apps.vendors",
-    "apps.store_admin",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + ADMIN_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -169,6 +169,66 @@ AUTH_PASSWORD_VALIDATORS = [
     # },
 ]
 
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
+        },
+    },
+    "filters": {
+        "require_debug_false": {
+            "()": "django.utils.log.RequireDebugFalse",
+        },
+    },
+    "handlers": {
+        "console": {
+            "level": "INFO",
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+        "file": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": "django.log",
+            "maxBytes": 1024 * 1024 * 10,  # 10MB
+            "backupCount": 5,
+            "formatter": "verbose",
+        },
+        # "security_file": {
+        #     "level": "WARNING",
+        #     "class": "logging.handlers.RotatingFileHandler",
+        #     "filename": "./log/myapp/security.log",
+        #     "maxBytes": 1024 * 1024 * 10,  # 10MB
+        #     "backupCount": 10,
+        #     "formatter": "verbose",
+        # },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console", "file"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        # "django.security": {
+        #     "handlers": ["security_file"],
+        #     "level": "WARNING",
+        #     "propagate": False,
+        # },
+        # "your_app": {
+        #     "handlers": ["console", "file"],
+        #     "level": "INFO",
+        #     "propagate": False,
+        # },
+    },
+}
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
@@ -220,11 +280,33 @@ AUTH_KIT = {
     "ALLOW_LOGIN_REDIRECT": False,  # Allow login redirects
     # 🔑 REQUIRED for browser
     "AUTH_COOKIE_SAMESITE": "None",
-    # "AUTH_COOKIE_SECURE": True,
+    "AUTH_COOKIE_SECURE": True,
     "AUTH_COOKIE_HTTPONLY": True,
-    # Leave domain unset for localhost
-    "AUTH_COOKIE_DOMAIN": None,
+    # "AUTH_COOKIE_PARTITIONED": True,
+    "USER_SERIALIZER": "apps.users.serializers.UserSerializer",
 }
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+}
+
+# CSRF_COOKIE_HTTPONLY = False  # Allows client-side JS to read the cookie value
+# CSRF_USE_SESSIONS = False
+# CSRF_COOKIE_NAME = "csrftoken"  # Default name
+# CORS_ALLOW_HEADERS = [
+#     "accept",
+#     "accept-encoding",
+#     "authorization",
+#     "content-type",
+#     "dnt",
+#     "origin",
+#     "user-agent",
+#     "x-csrftoken",  # Allow the X-CSRFToken header
+#     "x-requested-with",
+# ]
+# Add your React app's origin to trusted origins (change 'http://localhost:3000' as needed)
+
 
 SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": True,

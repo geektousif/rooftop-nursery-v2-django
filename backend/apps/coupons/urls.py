@@ -1,11 +1,12 @@
+"""
+Main URLs for Coupons app - includes all role-based URL configurations.
+"""
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-
-from apps.coupons.views import CouponViewSet
-
-router = DefaultRouter()
-router.register(r'coupons', CouponViewSet, basename='coupon')
 
 urlpatterns = [
-    path('', include(router.urls)),
+    # Public endpoints (no authentication required)
+    path('public/', include('apps.coupons.urls.public')),
+    
+    # Admin endpoints (authentication + admin role required)
+    path('admin/', include('apps.coupons.urls.admin')),
 ]

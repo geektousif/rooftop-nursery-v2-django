@@ -28,7 +28,6 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin):
         default=UserRoles.CUSTOMER,
     )
 
-    is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"

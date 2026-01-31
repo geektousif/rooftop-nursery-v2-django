@@ -4,6 +4,7 @@ class RequestLoggerMiddleware:
 
     def __call__(self, request):
         response = self.get_response(request)
+        # print("User:", request.user.role)
         print("Response:", request.body)
         return response
 

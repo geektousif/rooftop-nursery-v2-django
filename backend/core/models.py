@@ -1,7 +1,6 @@
 import uuid
 
 from django.db import models
-from django_softdelete.models import SoftDeleteModel
 
 
 class UUIDv7(models.Func):
@@ -24,6 +23,9 @@ class TimeStampedModel(models.Model):
         abstract = True
 
 
-class BaseModel(UUIDModel, TimeStampedModel, SoftDeleteModel):
+class BaseModel(UUIDModel, TimeStampedModel):
+    is_active = models.BooleanField(default=True)
+    deleted_at = models.DateTimeField(blank=True, null=True)
+
     class Meta:  # type: ignore
         abstract = True

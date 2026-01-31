@@ -41,10 +41,10 @@ urlpatterns = [
         include(
             [
                 # public endpoints
-                path("categories/", include("apps.categories.urls")),
+                path("categories/", include("apps.categories.urls.public")),
                 path("auth/", include("auth_kit.urls")),
                 path("coupons/", include("apps.coupons.urls")),
-                path("products/", include("apps.products.urls")),
+                path("products/", include("apps.products.urls.public")),
                 path("users/", include("apps.users.urls")),
                 path("customers/", include("apps.customers.urls")),
                 path("orders/", include("apps.orders.urls")),
@@ -54,6 +54,9 @@ urlpatterns = [
                 path("images/", include("apps.images.urls")),
                 path("storefront/", include("apps.storefront.urls")),
                 path("webhooks/", include("apps.webhooks.urls")),
+                # admin endpoints
+                path("admin/categories/", include("apps.categories.urls.admin")),
+                path("admin/products/", include("apps.products.urls.admin")),
             ],
         ),
     ),
@@ -72,7 +75,8 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += [
-        path("api/v1/auth/ui/", AuthKitUIView.as_view(), name="auth_kit_ui"),
+        path("api/auth/", include("auth_kit.urls")),
+        path("api/auth/ui/", AuthKitUIView.as_view(), name="auth_kit_ui"),
         path("silk/", include("silk.urls", namespace="silk")),
     ]
     urlpatterns += static_urls(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
