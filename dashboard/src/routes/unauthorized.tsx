@@ -1,3 +1,4 @@
+import { Button } from '@mantine/core'
 import { Link, createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/unauthorized')({
@@ -49,7 +50,7 @@ function UnauthorizedPage() {
 
         <div className="mb-6 text-sm text-gray-500">
           <p>
-            <strong>Your roles:</strong> {auth.user?.roles.join(', ') || 'None'}
+            <strong>Your roles:</strong> {auth.user?.role || 'None'}
           </p>
           <p>
             <strong>Your permissions:</strong>{' '}
@@ -59,18 +60,14 @@ function UnauthorizedPage() {
 
         <div className="space-y-3">
           <Link
-            to="/dashboard"
-            className="block w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors"
-          >
-            Go to Dashboard
-          </Link>
-
-          <Link
             to={redirect}
-            className="block w-full bg-gray-200 text-gray-800 py-2 px-4 rounded hover:bg-gray-300 transition-colors"
+            className="block w-full py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
           >
-            Try Again
+            Go Back
           </Link>
+          <Button variant="outline" fullWidth onClick={() => auth.logout()}>
+            Logout
+          </Button>
         </div>
       </div>
     </div>

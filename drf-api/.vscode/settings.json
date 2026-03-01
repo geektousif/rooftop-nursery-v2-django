@@ -1,0 +1,17 @@
+{
+  "editor.formatOnSave": true,
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "always",
+      "source.organizeImports.ruff": "always"
+    }
+  }
+  //   "python-envs.pythonProjects": [
+  //     {
+  //       "path": "",
+  //       "envManager": "ms-python.python:system",
+  //       "packageManager": "ms-python.python:pip"
+  //     }
+  //   ]
+}

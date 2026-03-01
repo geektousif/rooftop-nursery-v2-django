@@ -8,12 +8,5 @@
   "git": true,
   "version": 1,
   "framework": "react-cra",
-  "chosenAddOns": [
-    "eslint",
-    "tanstack-query",
-    "table",
-    "shadcn",
-    "form",
-    "t3env"
-  ]
+  "chosenAddOns": ["eslint", "tanstack-query", "t3env"]
 }

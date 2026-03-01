@@ -1,124 +1,161 @@
 import React from 'react'
-import { Link as NavLink, useLocation } from '@tanstack/react-router'
+import { Link, useLocation } from '@tanstack/react-router'
 import {
-  BarChart3,
-  ChevronLeft,
-  ChevronRight,
-  ClipboardList,
-  LayoutDashboard,
-  Leaf,
-  Package,
-  Settings,
-  ShoppingCart,
-  Store,
-  Users,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useAuth } from '@/features/auth/auth.provider'
-import { Button } from '@/components/ui/button'
+  IconChevronLeft,
+  IconChevronRight,
+  IconDoorExit,
+  IconLeaf,
+  IconUsers,
+} from '@tabler/icons-react'
+import { useAuthStore } from '@/features/auth/auth.provider'
+import {
+  Box,
+  NavLink,
+  ScrollArea,
+  ThemeIcon,
+  Text,
+  Group,
+  ActionIcon,
+  Tooltip,
+  rem,
+  Flex,
+  Button,
+} from '@mantine/core'
+import { navItems } from './navItems'
 
 interface SidebarProps {
   isCollapsed: boolean
   onToggle: () => void
 }
 
-interface NavItem {
-  label: string
-  icon: React.ElementType
-  path: string
-  adminOnly?: boolean
-}
-
-const navItems: Array<NavItem> = [
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
-  { label: 'Products', icon: Package, path: '/products' },
-  { label: 'Orders', icon: ShoppingCart, path: '/orders' },
-  { label: 'Vendors', icon: Store, path: '/vendors', adminOnly: true },
-  { label: 'Customers', icon: Users, path: '/customers', adminOnly: true },
-  { label: 'Analytics', icon: BarChart3, path: '/analytics' },
-  { label: 'Inventory', icon: ClipboardList, path: '/inventory' },
-  { label: 'Settings', icon: Settings, path: '/settings' },
-]
-
 export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
-  const { isAdmin } = useAuth()
+  const { isAdmin } = useAuthStore((state) => state)
   const location = useLocation()
 
-  const filteredNavItems = navItems.filter(
-    (item) => !item.adminOnly || isAdmin(),
-  )
+  const filteredNavItems = isAdmin() ? navItems.admin : navItems.vendor
 
   return (
-    <aside
-      className={cn(
-        'fixed left-0 top-0 z-40 h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out',
-        isCollapsed ? 'w-20' : 'w-64',
-      )}
+    <Box
+      component="aside"
+      style={{
+        zIndex: 40,
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: 'var(--mantine-color-body)',
+        // borderRight: '1px solid var(--mantine-color-default-border)',
+        transition: 'width 300ms ease',
+      }}
     >
-      {/* Logo */}
-      <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-            <Leaf className="h-5 w-5 text-primary-foreground" />
-          </div>
-          {!isCollapsed && (
-            <div className="animate-fade-in">
-              <h1 className="font-serif text-lg font-semibold text-foreground">
-                Rooftop
-              </h1>
-              <p className="text-xs text-muted-foreground">Nursery Admin</p>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* HEADER / LOGO */}
+      <Group h={64} px="md" align="center" wrap="nowrap">
+        <ThemeIcon variant="filled" size="lg" radius="md" color="primary">
+          <IconLeaf style={{ width: rem(20), height: rem(20) }} />
+        </ThemeIcon>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4 scrollbar-thin">
-        <ul className="space-y-1">
+        {!isCollapsed && (
+          <Box style={{ whiteSpace: 'nowrap', overflow: 'hidden' }}>
+            <Text fw={600} size="lg" lh={1.2} style={{ fontFamily: 'serif' }}>
+              Rooftop
+            </Text>
+            <Text size="xs" c="dimmed">
+              Nursery Admin
+            </Text>
+          </Box>
+        )}
+      </Group>
+
+      {/* NAVIGATION (ScrollArea handles the overflow nicely) */}
+      <ScrollArea mt="md" style={{ flex: 1 }}>
+        <Flex direction="column" h="80vh" p="xs">
           {filteredNavItems.map((item) => {
             const isActive =
               location.pathname === item.path ||
               (item.path !== '/' && location.pathname.startsWith(item.path))
 
             return (
-              <li key={item.path}>
+              <Tooltip
+                key={item.path}
+                label={item.label}
+                position="right"
+                disabled={!isCollapsed}
+                withArrow
+              >
                 <NavLink
+                  component={Link}
                   to={item.path}
-                  className={cn(
-                    'sidebar-item',
-                    isActive && 'sidebar-item-active',
-                    isCollapsed && 'justify-center px-3',
-                  )}
-                  title={isCollapsed ? item.label : undefined}
-                >
-                  <item.icon className="h-5 w-5 flex-shrink-0" />
-                  {!isCollapsed && (
-                    <span className="animate-fade-in font-medium">
-                      {item.label}
-                    </span>
-                  )}
-                </NavLink>
-              </li>
+                  label={!isCollapsed ? item.label : null}
+                  leftSection={
+                    <item.icon style={{ width: rem(20), height: rem(20) }} />
+                  }
+                  active={isActive}
+                  variant="light" // or "filled" or "subtle"
+                  // Styles to handle centering when collapsed
+                  styles={{
+                    root: {
+                      justifyContent: isCollapsed ? 'center' : 'flex-start',
+                      borderRadius: 'var(--mantine-radius-md)',
+                      marginBottom: 4,
+                    },
+                    section: {
+                      marginRight: isCollapsed ? 0 : undefined,
+                    },
+                  }}
+                />
+              </Tooltip>
             )
           })}
-        </ul>
-      </nav>
 
-      {/* Collapse Toggle */}
-      <div className="absolute bottom-4 right-0 translate-x-1/2">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={onToggle}
-          className="h-8 w-8 rounded-full bg-card shadow-md hover:bg-muted"
-        >
-          {isCollapsed ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
-          )}
-        </Button>
-      </div>
-    </aside>
+          {/* Logout at the very bottom */}
+
+          <Button
+            leftSection={
+              <IconDoorExit style={{ width: rem(20), height: rem(20) }} />
+            }
+            variant="filled"
+            color="red"
+            styles={{
+              root: {
+                justifyContent: isCollapsed ? 'center' : 'flex-start',
+                borderRadius: 'var(--mantine-radius-md)',
+                justifySelf: 'flex-end',
+                marginBottom: 4,
+                marginTop: 'auto',
+              },
+              section: {
+                marginRight: isCollapsed ? 0 : undefined,
+              },
+            }}
+            // put at last
+          >
+            {!isCollapsed && 'Logout'}
+          </Button>
+        </Flex>
+      </ScrollArea>
+
+      {/* COLLAPSE TOGGLE */}
+      {/* We position this absolute relative to the aside to mimic your 
+         "halfway off the edge" look.
+      */}
+      <ActionIcon
+        variant="default"
+        radius="xl"
+        size="md"
+        onClick={onToggle}
+        style={{
+          position: 'absolute',
+          bottom: rem(20),
+          right: 0,
+          transform: 'translateX(50%)', // Pushes it half-way out
+          zIndex: 50,
+          boxShadow: 'var(--mantine-shadow-sm)',
+        }}
+      >
+        {isCollapsed ? (
+          <IconChevronRight style={{ width: rem(16), height: rem(16) }} />
+        ) : (
+          <IconChevronLeft style={{ width: rem(16), height: rem(16) }} />
+        )}
+      </ActionIcon>
+    </Box>
   )
 }

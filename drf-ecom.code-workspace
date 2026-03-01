@@ -1,14 +1,17 @@
 {
   "folders": [
     {
-      "path": "backend"
+      "path": "backend",
     },
     {
-      "path": "storefront"
+      "path": "storefront",
     },
     {
-      "path": "dashboard"
-    }
+      "path": "dashboard",
+    },
+    {
+      "path": "drf-api",
+    },
   ],
   "settings": {
     "workbench.colorCustomizations": {
@@ -30,6 +33,7 @@
       "titleBar.inactiveBackground": "#21573299",
       "titleBar.inactiveForeground": "#e7e7e799"
     },
-    "peacock.color": "#215732"
-  }
+    "peacock.color": "#215732",
+    "typescript.tsdk": "dashboard\\node_modules\\typescript\\lib",
+  },
 }

@@ -1,5 +1,4 @@
-import { toast } from 'sonner'
-import { apiClient } from '@/lib/api/client'
+import { apiClient } from '@/api/client'
 
 export const login = (email: string, password: string) => {
   return apiClient.post('/auth/login/', { email, password })

@@ -1,73 +1,46 @@
-import React, { useState } from 'react'
-import { Navigate, Outlet } from '@tanstack/react-router'
+import React from 'react'
+import { Outlet } from '@tanstack/react-router'
+import { AppShell, useMantineTheme } from '@mantine/core'
+import { useDisclosure } from '@mantine/hooks'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
-import { cn } from '@/lib/utils'
 
 export const DashboardLayout: React.FC = () => {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const theme = useMantineTheme()
 
-  // if (isLoading) {
-  //   return (
-  //     <div className="flex h-screen items-center justify-center bg-background">
-  //       <div className="flex flex-col items-center gap-4">
-  //         <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-  //         <p className="text-muted-foreground">Loading...</p>
-  //       </div>
-  //     </div>
-  //   )
-  // }
+  // 1. Manage Mobile "Burger" state
+  const [mobileOpened, { toggle: toggleMobile }] = useDisclosure()
 
-  // if (!isAuthenticated) {
-  //   return <Navigate to="/login" replace />
-  // }
+  // 2. Manage Desktop "Mini Sidebar" state
+  const [desktopCollapsed, { toggle: toggleDesktop }] = useDisclosure(false)
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block">
-        <Sidebar
-          isCollapsed={isSidebarCollapsed}
-          onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        />
-      </div>
+    <AppShell
+      header={{ height: 64 }} // Matches the h-16 (64px) from your Header
+      navbar={{
+        width: desktopCollapsed ? 80 : 250, // Matches sidebar collapsed/expanded widths
+        breakpoint: 'md', // When to switch to mobile overlay mode
+        collapsed: { mobile: !mobileOpened, desktop: false },
+      }}
+      padding="md"
+      transitionDuration={300} // Smooth animation for width changes
+      layout="alt" // "alt" puts the Header *inside* the Sidebar space (optional, common for dashboards)
+      // OR remove layout="alt" if you want the Header to span the full width of the top
+    >
+      <AppShell.Header>
+        <Header onMobileMenuToggle={toggleMobile} />
+      </AppShell.Header>
 
-      {/* Mobile Sidebar Overlay */}
-      {isMobileMenuOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
+      <AppShell.Navbar p={0}>
+        {/* We pass the state down so the Sidebar can render the 
+           correct icons and the toggle button 
+        */}
+        <Sidebar isCollapsed={desktopCollapsed} onToggle={toggleDesktop} />
+      </AppShell.Navbar>
 
-      {/* Mobile Sidebar */}
-      <div
-        className={cn(
-          'fixed inset-y-0 left-0 z-40 w-64 transform bg-sidebar transition-transform duration-300 lg:hidden',
-          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full',
-        )}
-      >
-        <Sidebar
-          isCollapsed={false}
-          onToggle={() => setIsMobileMenuOpen(false)}
-        />
-      </div>
-
-      {/* Main Content */}
-      <div
-        className={cn(
-          'min-h-screen transition-all duration-300',
-          isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64',
-        )}
-      >
-        <Header
-          onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        />
-        <main className="p-4 lg:p-6">
-          <Outlet />
-        </main>
-      </div>
-    </div>
+      <AppShell.Main>
+        <Outlet />
+      </AppShell.Main>
+    </AppShell>
   )
 }

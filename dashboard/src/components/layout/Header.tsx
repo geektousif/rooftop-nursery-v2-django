@@ -1,70 +1,67 @@
 import React, { useState } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import {
-  Bell,
-  ChevronRight,
-  LogOut,
-  Menu,
-  Moon,
-  Search,
-  Settings,
-  Sun,
-  User,
-} from 'lucide-react'
-import { useAuth } from '@/features/auth/auth.provider'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+  IconBell,
+  IconChevronRight,
+  IconDoorExit,
+  IconMoon,
+  IconSearch,
+  IconSettings,
+  IconSun,
+} from '@tabler/icons-react'
+import { useAuthStore } from '@/features/auth/auth.provider'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
+  Menu,
+  Group,
+  ActionIcon,
+  TextInput,
+  Avatar,
+  Text,
+  UnstyledButton,
+  Breadcrumbs,
+  Burger,
+  rem,
+  Box,
+  Indicator,
+  useMantineColorScheme,
+  ScrollArea,
+  Divider,
+} from '@mantine/core'
+import { navItems } from './navItems'
 
 interface HeaderProps {
   onMobileMenuToggle: () => void
 }
 
-const breadcrumbMap: Record<string, string> = {
-  '/': 'Dashboard',
-  '/products': 'Products',
-  '/products/new': 'Add Product',
-  '/orders': 'Orders',
-  '/orders/manual': 'Manual Order',
-  '/vendors': 'Vendors',
-  '/vendors/payouts': 'Vendor Payouts',
-  '/customers': 'Customers',
-  '/analytics': 'Analytics',
-  '/inventory': 'Inventory',
-  '/settings': 'Settings',
-  '/settings/storefront': 'Storefront Settings',
+const adminBreadcrumbs = navItems.admin.map((item) => ({
+  label: item.label,
+  path: item.path,
+}))
+
+const vendorBreadcrumbs = navItems.vendor.map((item) => ({
+  label: item.label,
+  path: item.path,
+}))
+
+interface HeaderProps {
+  onMobileMenuToggle: () => void
 }
 
 export const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
-  const { user, logout } = useAuth()
+  const { user, logout } = useAuthStore((state) => state)
   const location = useLocation()
-  const [isDarkMode, setIsDarkMode] = useState(false)
+  const { colorScheme, toggleColorScheme } = useMantineColorScheme()
   const [searchQuery, setSearchQuery] = useState('')
 
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode)
-    document.documentElement.classList.toggle('dark')
-  }
-
-  // Generate breadcrumbs
+  // Generate breadcrumbs logic (kept same)
   const pathSegments = location.pathname.split('/').filter(Boolean)
-  const breadcrumbs = [
+  const breadcrumbItems = [
     { label: 'Home', path: '/' },
     ...pathSegments.map((segment, index) => {
       const path = '/' + pathSegments.slice(0, index + 1).join('/')
       return {
         label:
-          breadcrumbMap[path] ||
+          segment === 'admin' ||
           segment.charAt(0).toUpperCase() + segment.slice(1),
         path,
       }
@@ -73,185 +70,219 @@ export const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
 
   const getInitials = (name: string) => {
     return name
-      .split(' ')
+      ?.split(' ')
       .map((n) => n[0])
       .join('')
       .toUpperCase()
       .slice(0, 2)
   }
 
+  // Helper styles for the sticky blur effect
+  const headerStyle = {
+    zIndex: 30,
+    background: 'var(--mantine-color-body)', // Fallback
+    backgroundColor:
+      colorScheme === 'dark'
+        ? 'rgba(36, 36, 36, 0.8)'
+        : 'rgba(255, 255, 255, 0.8)',
+    backdropFilter: 'blur(10px)',
+  }
+
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 lg:px-6">
-      {/* Left: Mobile Menu + Breadcrumbs */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="lg:hidden"
-          onClick={onMobileMenuToggle}
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
+    <Box component="header" h={64} px="md" style={headerStyle}>
+      <Group h="100%" justify="space-between">
+        {/* LEFT: Mobile Menu + Breadcrumbs */}
+        <Group>
+          <Burger
+            opened={false}
+            onClick={onMobileMenuToggle}
+            hiddenFrom="md"
+            size="sm"
+          />
 
-        <nav className="hidden md:flex items-center gap-1 text-sm">
-          {breadcrumbs.map((crumb, index) => (
-            <React.Fragment key={crumb.path}>
-              {index > 0 && (
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              )}
-              {index === breadcrumbs.length - 1 ? (
-                <span className="font-medium text-foreground">
-                  {crumb.label}
-                </span>
+          {/* Mantine Breadcrumbs component */}
+          <Breadcrumbs
+            separator={<IconChevronRight size={14} />}
+            visibleFrom="md"
+            style={{ fontSize: '0.875rem' }}
+          >
+            {breadcrumbItems.map((item, index) => {
+              const isLast = index === breadcrumbItems.length - 1
+              return isLast ? (
+                <Text key={item.path} size="sm" fw={500} c="dimmed">
+                  {item.label}
+                </Text>
               ) : (
-                <Link
-                  to={crumb.path}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
+                <Text
+                  key={item.path}
+                  component={Link}
+                  to={item.path}
+                  size="sm"
+                  c="blue" // or your primary color
+                  style={{ textDecoration: 'none' }}
                 >
-                  {crumb.label}
-                </Link>
-              )}
-            </React.Fragment>
-          ))}
-        </nav>
-      </div>
+                  {item.label}
+                </Text>
+              )
+            })}
+          </Breadcrumbs>
+        </Group>
 
-      {/* Center: Search */}
-      <div className="hidden md:flex flex-1 max-w-md mx-8">
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
+        {/* CENTER: Search */}
+        <Box
+          visibleFrom="md"
+          style={{ flex: 1, maxWidth: 400, margin: '0 20px' }}
+        >
+          <TextInput
             placeholder="Search products, orders, vendors..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 bg-muted/50 border-0 focus-visible:ring-1"
+            onChange={(e) => setSearchQuery(e.currentTarget.value)}
+            leftSection={<IconSearch size={16} />}
           />
-        </div>
-      </div>
+        </Box>
 
-      {/* Right: Actions */}
-      <div className="flex items-center gap-2">
-        {/* Dark Mode Toggle */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleDarkMode}
-          className="text-muted-foreground hover:text-foreground"
-        >
-          {isDarkMode ? (
-            <Sun className="h-5 w-5" />
-          ) : (
-            <Moon className="h-5 w-5" />
-          )}
-        </Button>
+        {/* RIGHT: Actions */}
+        <Group gap="sm">
+          {/* Dark Mode Toggle */}
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            onClick={toggleColorScheme}
+            size="lg"
+            aria-label="Toggle color scheme"
+          >
+            {colorScheme === 'dark' ? (
+              <IconSun style={{ width: rem(20), height: rem(20) }} />
+            ) : (
+              <IconMoon style={{ width: rem(20), height: rem(20) }} />
+            )}
+          </ActionIcon>
 
-        {/* Notifications */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative text-muted-foreground hover:text-foreground"
-            >
-              <Bell className="h-5 w-5" />
-              <Badge
-                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-                variant="destructive"
-              >
-                3
-              </Badge>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
-            <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <div className="max-h-80 overflow-y-auto">
-              <DropdownMenuItem className="flex flex-col items-start gap-1 p-3 cursor-pointer">
-                <span className="font-medium">New order received</span>
-                <span className="text-xs text-muted-foreground">
-                  Order #1234 from John Doe
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  2 minutes ago
-                </span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex flex-col items-start gap-1 p-3 cursor-pointer">
-                <span className="font-medium">Vendor approval pending</span>
-                <span className="text-xs text-muted-foreground">
-                  Green Thumb Gardens requested approval
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  1 hour ago
-                </span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex flex-col items-start gap-1 p-3 cursor-pointer">
-                <span className="font-medium">Low stock alert</span>
-                <span className="text-xs text-muted-foreground">
-                  Money Plant is running low on stock
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  3 hours ago
-                </span>
-              </DropdownMenuItem>
-            </div>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="justify-center text-primary cursor-pointer">
-              View all notifications
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          {/* Notifications */}
+          <Menu shadow="md" width={320} position="bottom-end">
+            <Menu.Target>
+              <ActionIcon variant="subtle" color="gray" size="lg">
+                <Indicator
+                  label="3"
+                  size={16}
+                  offset={4}
+                  color="red"
+                  withBorder
+                >
+                  <IconBell style={{ width: rem(20), height: rem(20) }} />
+                </Indicator>
+              </ActionIcon>
+            </Menu.Target>
 
-        {/* User Menu */}
-        {/* <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2 px-2">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={user?.avatar} />
-                <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                  {user ? getInitials(user.name) : 'U'}
-                </AvatarFallback>
-              </Avatar>
-              <div className="hidden md:flex flex-col items-start">
-                <span className="text-sm font-medium">{user?.name}</span>
-                <span className="text-xs text-muted-foreground capitalize">
-                  {user?.role === 'admin_vendor' ? 'Admin' : 'Vendor'}
-                </span>
-              </div>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link
-                to="/settings"
-                className="flex items-center gap-2 cursor-pointer"
+            <Menu.Dropdown>
+              <Menu.Label>Notifications</Menu.Label>
+              <Divider mb={5} />
+
+              <ScrollArea.Autosize type="scroll" mah={300}>
+                <Menu.Item>
+                  <Box>
+                    <Text size="sm" fw={500}>
+                      New order received
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      Order #1234 from John Doe
+                    </Text>
+                    <Text size="xs" c="dimmed" mt={2}>
+                      2 minutes ago
+                    </Text>
+                  </Box>
+                </Menu.Item>
+                <Menu.Item>
+                  <Box>
+                    <Text size="sm" fw={500}>
+                      Vendor approval pending
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      Green Thumb Gardens requested approval
+                    </Text>
+                    <Text size="xs" c="dimmed" mt={2}>
+                      1 hour ago
+                    </Text>
+                  </Box>
+                </Menu.Item>
+                <Menu.Item>
+                  <Box>
+                    <Text size="sm" fw={500}>
+                      Low stock alert
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      Money Plant is running low
+                    </Text>
+                    <Text size="xs" c="dimmed" mt={2}>
+                      3 hours ago
+                    </Text>
+                  </Box>
+                </Menu.Item>
+              </ScrollArea.Autosize>
+
+              <Divider mt={5} />
+              <Menu.Item c="blue" style={{ textAlign: 'center' }}>
+                View all notifications
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+
+          {/* User Menu */}
+          <Menu shadow="md" width={200} position="bottom-end">
+            <Menu.Target>
+              <UnstyledButton
+                style={{
+                  padding: '4px',
+                  borderRadius: 'var(--mantine-radius-sm)',
+                }}
               >
-                <User className="h-4 w-4" />
-                Profile
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link
-                to="/settings"
-                className="flex items-center gap-2 cursor-pointer"
+                <Group gap="xs">
+                  <Avatar src={user?.avatar} color="blue" radius="xl">
+                    {user ? getInitials(user.name) : 'U'}
+                  </Avatar>
+                  <Box visibleFrom="md">
+                    <Text size="sm" fw={500} lh={1}>
+                      {user?.name}
+                    </Text>
+                    <Text size="xs" c="dimmed" tt="capitalize">
+                      {user?.role === 'ADMIN' ? 'Admin' : 'Vendor'}
+                    </Text>
+                  </Box>
+                </Group>
+              </UnstyledButton>
+            </Menu.Target>
+
+            <Menu.Dropdown>
+              <Menu.Label>My Account</Menu.Label>
+              <Menu.Item
+                component={Link}
+                to={
+                  user?.role === 'ADMIN'
+                    ? '/admin/settings'
+                    : '/vendor/settings'
+                }
+                leftSection={
+                  <IconSettings style={{ width: rem(14), height: rem(14) }} />
+                }
               >
-                <Settings className="h-4 w-4" />
                 Settings
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={logout}
-              className="flex items-center gap-2 text-destructive cursor-pointer focus:text-destructive"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu> */}
-      </div>
-    </header>
+              </Menu.Item>
+
+              <Menu.Divider />
+
+              <Menu.Item
+                color="red"
+                onClick={logout}
+                leftSection={
+                  <IconDoorExit style={{ width: rem(14), height: rem(14) }} />
+                }
+              >
+                Logout
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        </Group>
+      </Group>
+    </Box>
   )
 }

@@ -75,19 +75,19 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
-    "apps.categories",
-    "apps.products",
-    "apps.users",
-    "apps.customers",
-    "apps.images",
-    "apps.inventory",
-    "apps.checkout",
-    "apps.orders",
-    "apps.payments",
-    "apps.storefront",
-    "apps.coupons",
-    "apps.webhooks",
-    "apps.vendors",
+    "apps.domains.users",
+    "apps.domains.categories",
+    "apps.domains.products",
+    "apps.domains.customers",
+    "apps.integrations.images",
+    "apps.domains.inventory",
+    # "apps.domains.checkout",
+    "apps.domains.orders",
+    "apps.domains.payments",
+    # "apps.domains.storefront",
+    # "apps.domains.coupons",
+    # "apps.delivery.webhooks",
+    "apps.domains.vendors",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + ADMIN_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -144,7 +144,7 @@ DATABASES = {
 }
 
 AUTHENTICATION_BACKENDS = [
-    "apps.users.backends.PhoneOrEmailAuthenticationBackend",
+    "apps.domains.users.backends.PhoneOrEmailAuthenticationBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
 
@@ -283,7 +283,7 @@ AUTH_KIT = {
     "AUTH_COOKIE_SECURE": True,
     "AUTH_COOKIE_HTTPONLY": True,
     # "AUTH_COOKIE_PARTITIONED": True,
-    "USER_SERIALIZER": "apps.users.serializers.UserSerializer",
+    "USER_SERIALIZER": "apps.domains.users.serializers.UserSerializer",
 }
 
 SIMPLE_JWT = {

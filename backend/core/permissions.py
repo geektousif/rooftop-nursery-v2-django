@@ -76,6 +76,13 @@ def invalidate_user_permissions_cache(user):
     cache.delete(cache_key)
 
 
+class IsAdmin(BasePermission):
+    def has_permission(self, request, view):
+        return bool(
+            request.user and request.user.is_authenticated and request.user.can_access_admin_panel()
+        )
+
+
 class ReadOnly(BasePermission):
     """Allow read-only access (GET, HEAD, OPTIONS)."""
 
@@ -160,18 +167,18 @@ class AnyoneCanCreateOnly(BasePermission):
 class IsVendor(BasePermission):
     """
     Check if user is a vendor with approved account.
-    
+
     Usage:
         permission_classes = [IsAuthenticated, IsVendor]
     """
-    
+
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
-        
-        if not hasattr(request.user, 'vendor'):
+
+        if not hasattr(request.user, "vendor"):
             return False
-        
+
         # Vendor must be approved
         return request.user.vendor.is_approved
 
@@ -179,94 +186,90 @@ class IsVendor(BasePermission):
 class IsVendorOwner(BasePermission):
     """
     Check if vendor owns the resource.
-    
+
     Assumes obj has a 'vendor' attribute or 'product.vendor' path.
-    
+
     Usage:
         permission_classes = [IsAuthenticated, IsVendor, IsVendorOwner]
     """
-    
+
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
-        
-        if not hasattr(request.user, 'vendor'):
+
+        if not hasattr(request.user, "vendor"):
             return False
-        
+
         return request.user.vendor.is_approved
-    
+
     def has_object_permission(self, request, view, obj):
         # Admin can access anything
         if request.user.can_access_admin_panel():
             return True
-        
+
         # Check vendor ownership
-        vendor_field = getattr(view, 'vendor_field', 'vendor')
-        
+        vendor_field = getattr(view, "vendor_field", "vendor")
+
         try:
             if isinstance(vendor_field, str):
                 obj_vendor = operator.attrgetter(vendor_field)(obj)
             else:
                 # Handle nested paths like 'product.vendor'
-                obj_vendor = operator.attrgetter('.'.join(vendor_field))(obj)
-            
+                obj_vendor = operator.attrgetter(".".join(vendor_field))(obj)
+
             return obj_vendor.id == request.user.vendor.id
         except AttributeError:
-            logger.error(
-                f"Invalid vendor_field '{vendor_field}' on {view.__class__.__name__}"
-            )
+            logger.error(f"Invalid vendor_field '{vendor_field}' on {view.__class__.__name__}")
             return False
 
 
 class IsCustomer(BasePermission):
     """
     Check if user is a customer.
-    
+
     Usage:
         permission_classes = [IsAuthenticated, IsCustomer]
     """
-    
+
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
-        
+
         return request.user.is_customer
 
 
 class IsCustomerOwner(BasePermission):
     """
     Check if customer owns the resource.
-    
+
     Usage:
         permission_classes = [IsAuthenticated, IsCustomer, IsCustomerOwner]
     """
-    
+
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
-        
+
         return request.user.is_customer
-    
+
     def has_object_permission(self, request, view, obj):
         # Admin can access anything
         if request.user.can_access_admin_panel():
             return True
-        
+
         # Check customer ownership
-        customer_field = getattr(view, 'customer_field', 'customer')
-        
+        customer_field = getattr(view, "customer_field", "customer")
+
         try:
             if isinstance(customer_field, str):
                 obj_customer = operator.attrgetter(customer_field)(obj)
             else:
-                obj_customer = operator.attrgetter('.'.join(customer_field))(obj)
-            
+                obj_customer = operator.attrgetter(".".join(customer_field))(obj)
+
             # Handle both Customer model and user reference
-            if hasattr(obj_customer, 'user'):
+            if hasattr(obj_customer, "user"):
                 return obj_customer.user.id == request.user.id
             return obj_customer.id == request.user.id
         except AttributeError:
-            logger.error(
-                f"Invalid customer_field '{customer_field}' on {view.__class__.__name__}"
-            )
+            logger.error(f"Invalid customer_field '{customer_field}' on {view.__class__.__name__}")
             return False

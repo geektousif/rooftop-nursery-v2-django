@@ -1,16 +1,30 @@
+import {
+  ErrorComponent,
+  RouterProvider,
+  createRouter,
+} from '@tanstack/react-router'
 import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
-import { RouterProvider, createRouter } from '@tanstack/react-router'
-
-import * as TanStackQueryProvider from './integrations/tanstack-query/root-provider.tsx'
 
 // Import the generated route tree
-import { routeTree } from './routeTree.gen'
+import { routeTree } from './routeTree.gen.ts'
 
-import './styles.css'
+import '@mantine/core/styles.css'
+import '@mantine/notifications/styles.css'
+import '@mantine/dates/styles.css'
+import 'mantine-react-table/styles.css'
+import { useAuthStore } from './features/auth/auth.provider.tsx'
+import * as TanStackQueryProvider from './integrations/tanstack-query/root-provider.tsx'
 import reportWebVitals from './reportWebVitals.ts'
-import { AuthProvider, useAuth } from './features/auth/auth.provider.tsx'
+// import './styles.css'
 
+import { MantineProvider } from '@mantine/core'
+import theme from './theme.tsx'
+
+import '@fontsource-variable/playfair-display'
+import '@fontsource-variable/nunito'
+import { CustomLoader } from './components/common/Loader.tsx'
+import NotFound from './components/common/NotFound.tsx'
 // Create a new router instance
 
 const TanStackQueryProviderContext = TanStackQueryProvider.getContext()
@@ -24,6 +38,9 @@ const router = createRouter({
   scrollRestoration: true,
   defaultStructuralSharing: true,
   defaultPreloadStaleTime: 0,
+  defaultErrorComponent: ({ error, reset }) => <ErrorComponent error={error} />,
+  defaultPendingComponent: CustomLoader,
+  defaultNotFoundComponent: () => <NotFound />,
 })
 
 // Register the router instance for type safety
@@ -33,18 +50,19 @@ declare module '@tanstack/react-router' {
   }
 }
 
-function InnerApp() {
-  const auth = useAuth()
+function AppRouter() {
+  const auth = useAuthStore((state) => state)
+
   return <RouterProvider router={router} context={{ auth }} />
 }
 
 function App() {
   return (
-    <TanStackQueryProvider.Provider {...TanStackQueryProviderContext}>
-      <AuthProvider>
-        <InnerApp />
-      </AuthProvider>
-    </TanStackQueryProvider.Provider>
+    <MantineProvider theme={theme}>
+      <TanStackQueryProvider.Provider {...TanStackQueryProviderContext}>
+        <AppRouter />
+      </TanStackQueryProvider.Provider>
+    </MantineProvider>
   )
 }
 

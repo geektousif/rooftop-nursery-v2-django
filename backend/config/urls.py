@@ -15,7 +15,6 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-from auth_kit.views import AuthKitUIView
 from django.conf import settings
 from django.conf.urls.static import static as static_urls
 from django.contrib import admin
@@ -26,40 +25,22 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-from apps.categories.views import AdminTreeAPI, VendorTreeAPI
-
 urlpatterns = [
-    # Vendor + admin
-    *VendorTreeAPI(base_url="api/v1/vendor").discover(),
-    # Admin only
-    *AdminTreeAPI(base_url="api/v1/admin").discover(),
-    # path("admin/api/imagekit-auth/", imagekit_auth_view, name="imagekit_auth"),
     path("admin/", admin.site.urls),
+    path("treenode/", include("treenode.urls", namespace="treenode")),
     # API endpoints
     path(
         "api/v1/",
         include(
             [
-                # public endpoints
-                path("categories/", include("apps.categories.urls.public")),
-                path("auth/", include("auth_kit.urls")),
-                path("coupons/", include("apps.coupons.urls")),
-                path("products/", include("apps.products.urls.public")),
-                path("users/", include("apps.users.urls")),
-                path("customers/", include("apps.customers.urls")),
-                path("orders/", include("apps.orders.urls")),
-                path("inventory/", include("apps.inventory.urls")),
-                path("payments/", include("apps.payments.urls")),
-                path("vendors/", include("apps.vendors.urls")),
-                path("images/", include("apps.images.urls")),
-                path("storefront/", include("apps.storefront.urls")),
-                path("webhooks/", include("apps.webhooks.urls")),
-                # admin endpoints
-                path("admin/categories/", include("apps.categories.urls.admin")),
-                path("admin/products/", include("apps.products.urls.admin")),
+                path("auth/", include("auth_kit.urls"), name="auth_kit"),
+                path("admin/", include("config.endpoints.admin"), name="admin_endpoints"),
+                path("vendor/", include("config.endpoints.vendor"), name="vendor_endpoints"),
+                path("", include("config.endpoints.public"), name="public_endpoints"),
             ],
         ),
     ),
+    # Docs
     path("api/docs/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
         "api/docs/swagger/",
@@ -75,8 +56,7 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += [
-        path("api/auth/", include("auth_kit.urls")),
-        path("api/auth/ui/", AuthKitUIView.as_view(), name="auth_kit_ui"),
+        # path("api/auth/ui/", AuthKitUIView.as_view(), name="auth_kit_ui"),
         path("silk/", include("silk.urls", namespace="silk")),
     ]
     urlpatterns += static_urls(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
